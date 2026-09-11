@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Anúncios Visuais — Editor de Etiquetas</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap');
+
+  :root{
+    --ink:#14161D; --ink-soft:#1D2029; --panel:#20232E; --panel-soft:#2A2E3B;
+    --paper:#EDEAE1; --line:#D9D4C6;
+    --accent:#3457D5; --amber:#E0A63A; --ink2:#565B6B; --ink3:#8A8FA0;
+    --danger:#C24545; --good:#2E8B57;
+    --font-display:'Space Grotesk',system-ui,sans-serif;
+    --font-body:'Inter',system-ui,sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;background:var(--ink);font-family:var(--font-body);color:#fff;-webkit-font-smoothing:antialiased;}
+  #app{display:flex;width:100%;height:100vh;overflow:hidden;}
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--panel-soft);border-radius:8px;}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+  button:disabled{opacity:.4;cursor:not-allowed;}
+  input,select,textarea{font-family:inherit;}
+  input:disabled,select:disabled{opacity:.45;cursor:not-allowed;}
+  a{color:inherit;text-decoration:none;}
+  img{max-width:100%;display:block;}
+
+  .flex{display:flex;} .flex-col{flex-direction:column;} .items-center{align-items:center;}
+  .justify-between{justify-content:space-between;} .justify-center{justify-content:center;}
+  .flex-1{flex:1;min-width:0;} .shrink-0{flex-shrink:0;} .gap-1{gap:4px;} .gap-1_5{gap:6px;}
+  .gap-2{gap:8px;} .gap-2_5{gap:10px;} .gap-3{gap:12px;} .truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .grid{display:grid;} .relative{position:relative;} .absolute{position:absolute;} .hidden{display:none !important;}
+  .w-full{width:100%;} .overflow-y-auto{overflow-y:auto;} .overflow-auto{overflow:auto;} .overflow-hidden{overflow:hidden;}
+  .cursor-pointer{cursor:pointer;} .text-center{text-align:center;} .mt-auto{margin-top:auto;}
+
+  .navrail{width:76px;flex-shrink:0;background:var(--ink);border-right:1px solid var(--panel-soft);
+    display:flex;flex-direction:column;align-items:center;padding:20px 0;gap:4px;}
+  .navrail .logo{width:40px;height:40px;border-radius:12px;background:var(--accent);display:flex;align-items:center;justify-content:center;margin-bottom:24px;}
+  .navrail button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:10px;width:64px;}
+  .navrail button.active{background:var(--panel-soft);}
+  .navrail button span{font-size:9.5px;color:var(--ink3);}
+  .navrail button.active span{color:#fff;}
+  .navrail button svg{color:var(--ink3);}
+  .navrail button.active svg{color:var(--amber);}
+
+  .icon-btn{width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:8px;color:var(--ink3);transition:background .12s;}
+  .icon-btn:hover{background:var(--panel-soft);}
+  .icon-btn.active{background:var(--accent);color:#fff;}
+  .icon-btn.danger{color:var(--danger);}
+  .icon-btn.sm{width:22px;height:22px;}
+
+  .main-view{flex:1;min-width:0;overflow-y:auto;padding:32px;}
+  h1.page-title{font-family:var(--font-display);font-size:24px;color:#fff;font-weight:600;margin:0;}
+  .page-sub{color:var(--ink3);font-size:13px;margin-top:4px;}
+
+  .btn-primary{background:var(--accent);color:#fff;padding:10px 16px;border-radius:12px;font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:8px;}
+  .btn-secondary{background:var(--panel);color:#fff;padding:10px 16px;border-radius:12px;font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:8px;}
+  .btn-ghost{background:var(--ink-soft);color:#fff;padding:8px 12px;border-radius:10px;font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:6px;}
+  .btn-danger-soft{background:#3A1E1E;color:#F0A0A0;padding:8px 12px;border-radius:10px;font-size:12.5px;font-weight:600;}
+
+  .input,select.input,textarea.input{width:100%;padding:8px 10px;border-radius:8px;font-size:13px;background:var(--ink-soft);
+    border:1px solid var(--panel-soft);color:#EDEAE1;outline:none;}
+  .field{display:block;margin-bottom:12px;}
+  .field-label{display:block;margin-bottom:5px;font-size:11.5px;font-weight:600;color:var(--ink3);}
+
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:30px;}
+  .stat-card{background:var(--panel);border:1px solid var(--panel-soft);border-radius:16px;padding:16px;}
+  .stat-dot{width:8px;height:8px;border-radius:8px;margin-bottom:10px;}
+  .stat-value{font-family:var(--font-display);font-size:26px;font-weight:600;}
+  .stat-label{font-size:12px;color:var(--ink3);}
+
+  .proj-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+  .prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;}
+
+  .card{background:var(--panel);border:1px solid var(--panel-soft);border-radius:16px;overflow:hidden;cursor:pointer;}
+  .card .thumb{aspect-ratio:16/11;background:var(--ink-soft);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;}
+  .card .thumb img{width:100%;height:100%;object-fit:cover;}
+  .card .body{padding:14px;}
+  .card .title{color:#fff;font-size:13.5px;font-weight:600;}
+  .card .meta{color:var(--ink3);font-size:11.5px;margin-top:4px;}
+  .card-actions{position:absolute;top:8px;right:8px;display:flex;gap:2px;background:#00000088;border-radius:8px;padding:2px;opacity:0;transition:opacity .12s;}
+  .card:hover .card-actions{opacity:1;}
+
+  .empty-state{background:var(--panel);border:1px dashed var(--panel-soft);border-radius:16px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;padding:64px 24px;}
+  .empty-state h3{font-family:var(--font-display);color:#fff;font-size:16px;margin:12px 0 6px;}
+  .empty-state p{color:var(--ink3);font-size:13px;max-width:380px;margin:0;}
+
+  .prod-card{background:var(--panel);border:1px solid var(--panel-soft);border-radius:16px;padding:12px;display:flex;flex-direction:column;}
+  .prod-card .img{height:120px;border-radius:12px;background:var(--ink-soft);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:10px;}
+  .prod-card .img img{width:100%;height:100%;object-fit:cover;}
+  .prod-card .name{color:#fff;font-size:13.5px;font-weight:600;}
+  .prod-card .sub{color:var(--ink3);font-size:11px;margin:2px 0 8px;}
+  .prod-card .price-row{display:flex;align-items:baseline;gap:8px;margin-bottom:10px;}
+  .price-main{color:var(--amber);font-size:15px;font-weight:700;font-family:var(--font-mono);}
+  .price-old{color:var(--ink3);font-size:11px;text-decoration:line-through;}
+  .status-pill{font-size:10.5px;padding:4px 9px;border-radius:99px;font-weight:600;}
+  .status-pill.active{background:#1F3D2C;color:var(--good);}
+  .status-pill.inactive{background:var(--ink-soft);color:var(--ink3);}
+
+  .modal-overlay{position:fixed;inset:0;background:#0B0C10AA;display:flex;align-items:center;justify-content:center;padding:16px;z-index:200;}
+  .modal-box{background:var(--panel);border:1px solid var(--panel-soft);border-radius:18px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px #00000066;}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--panel-soft);}
+  .modal-head h3{font-family:var(--font-display);color:#fff;font-size:16px;font-weight:600;margin:0;}
+  .modal-body{padding:16px 20px;overflow-y:auto;}
+
+  .editor{flex:1;min-width:0;display:flex;}
+  .scenes-panel{width:224px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--panel-soft);display:flex;flex-direction:column;}
+  .scenes-head{padding:14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--panel-soft);}
+  .scenes-head input{background:transparent;color:#fff;font-size:13.5px;font-weight:600;border:none;outline:none;width:100%;}
+  .scenes-sub{padding:10px 14px 6px;display:flex;align-items:center;justify-content:space-between;}
+  .scenes-sub span{font-size:11px;color:var(--ink3);font-weight:600;letter-spacing:.4px;}
+  .scenes-list{flex:1;overflow-y:auto;padding:0 10px 10px;display:flex;flex-direction:column;gap:8px;}
+  .scene-item{border-radius:12px;padding:8px;cursor:pointer;border:1px solid transparent;}
+  .scene-item.active{background:var(--panel-soft);border-color:var(--accent);}
+  .scene-thumb{height:70px;border-radius:8px;background:var(--ink-soft);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:6px;}
+  .scene-thumb img{width:100%;height:100%;object-fit:cover;}
+  .scene-row{display:flex;align-items:center;justify-content:space-between;}
+  .scene-row span{font-size:11.5px;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .scene-actions{display:flex;gap:1px;opacity:0;}
+  .scene-item:hover .scene-actions{opacity:1;}
+
+  .editor-center{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .editor-topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--panel-soft);background:var(--ink);flex-wrap:wrap;gap:8px;}
+  .editor-canvas-wrap{flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:32px;
+    background-color:var(--ink-soft);background-image:radial-gradient(var(--panel) 1px, transparent 1px);background-size:18px 18px;}
+  .canvas-stage{position:relative;border-radius:10px;overflow:hidden;background:#000;box-shadow:0 20px 60px #0009;user-select:none;}
+  .canvas-stage img.scene-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;}
+  .upload-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:16px;cursor:pointer;background:var(--panel);border:2px dashed var(--panel-soft);width:420px;}
+  .upload-drop span{color:var(--ink3);font-size:13px;margin-top:10px;}
+
+  .props-panel{width:288px;flex-shrink:0;background:var(--panel);border-left:1px solid var(--panel-soft);display:flex;flex-direction:column;overflow-y:auto;}
+  .props-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--panel-soft);}
+  .props-head span{color:#fff;font-size:13px;font-weight:600;}
+  .props-body{padding:16px;}
+  .style-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+  .style-swatch{border-radius:10px;padding:8px 0;font-size:10.5px;font-weight:600;border:1px solid var(--panel-soft);}
+  .style-swatch.selected{border:2px solid var(--amber);}
+  .seg-btn-row{display:flex;gap:6px;flex-wrap:wrap;}
+  .seg-btn{flex:1;padding:7px 0;border-radius:8px;font-size:12px;background:var(--ink-soft);color:#fff;text-align:center;}
+  .seg-btn.selected{background:var(--accent);}
+  .product-mini{background:var(--ink-soft);border-radius:12px;padding:12px;display:flex;gap:10px;margin-bottom:16px;}
+  .product-mini img,.product-mini .ph{width:44px;height:44px;border-radius:8px;object-fit:cover;background:var(--panel-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .quick-actions{display:flex;align-items:center;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--panel-soft);}
+  .quick-actions .btn-ghost{flex:1;justify-content:center;}
+
+  .layers-add{padding:16px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--panel-soft);}
+  .layers-list{flex:1;overflow-y:auto;padding:12px;}
+  .layers-title{display:flex;align-items:center;gap:6px;margin-bottom:8px;padding:0 4px;}
+  .layers-title span{font-size:11px;color:var(--ink3);font-weight:600;letter-spacing:.4px;}
+  .layer-row{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:10px;background:var(--panel-soft);cursor:pointer;margin-bottom:4px;}
+  .layer-row span.label-txt{flex:1;font-size:12px;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .layer-actions{display:flex;gap:1px;opacity:.4;}
+  .layer-row:hover .layer-actions{opacity:1;}
+
+  .cv-label{position:absolute;display:flex;align-items:center;cursor:grab;}
+  .cv-label .box{white-space:nowrap;line-height:1.25;}
+  .cv-point{position:absolute;width:12px;height:12px;border-radius:99px;transform:translate(-50%,-50%);cursor:grab;z-index:500;}
+  .cv-resize{position:absolute;right:-6px;bottom:-6px;width:14px;height:14px;border-radius:99px;background:var(--amber);border:2px solid #fff;cursor:nwse-resize;}
+  .cv-text{position:absolute;cursor:grab;padding:2px;}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--panel);color:#fff;padding:10px 16px;
+    border-radius:99px;font-size:13px;display:flex;align-items:center;gap:8px;border:1px solid var(--panel-soft);box-shadow:0 10px 30px #0006;z-index:300;}
+
+  .coming-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:40px;}
+  .coming-inner{max-width:420px;text-align:center;}
+  .coming-icon{width:56px;height:56px;border-radius:16px;background:var(--panel);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}
+  .coming-inner h2{font-family:var(--font-display);color:#fff;font-size:20px;margin:0 0 8px;}
+  .coming-inner p{color:var(--ink3);font-size:13.5px;line-height:1.6;margin:0;}
+
+  .tabbar{display:flex;gap:4px;padding:4px;border-radius:12px;background:var(--ink-soft);margin-bottom:16px;}
+  .tabbar button{flex:1;padding:9px 0;border-radius:9px;font-size:12.5px;font-weight:600;color:#fff;}
+  .tabbar button.selected{background:var(--accent);}
+
+  .video-scene-row{margin-bottom:6px;}
+
+  /* ============================== RESPONSIVE / MOBILE ============================== */
+  .mobile-topbar{display:none;}
+  .mobile-only{display:none;}
+  .drawer-close-btn{display:none;}
+  .mobile-backdrop{display:none;}
+  .cv-label,.cv-point,.cv-resize,.cv-text{touch-action:none;}
+  .canvas-stage{touch-action:none;}
+
+  @media (max-width:900px){
+    html,body{height:100%;}
+    #app{flex-direction:column;height:100dvh;position:relative;overflow:hidden;}
+    .mobile-topbar{
+      display:flex;align-items:center;justify-content:space-between;gap:8px;
+      padding:10px 12px;background:var(--ink);border-bottom:1px solid var(--panel-soft);flex-shrink:0;z-index:60;
+    }
+    .mobile-topbar-title{color:#fff;font-family:var(--font-display);font-size:14.5px;font-weight:600;flex:1;text-align:center;}
+    .mobile-only{display:flex;}
+    .desktop-only{display:none !important;}
+    .drawer-close-btn{display:flex;}
+    .mobile-backdrop{display:block;position:fixed;inset:0;background:#000000AA;z-index:140;}
+
+    .navrail{
+      position:fixed;top:0;left:0;bottom:0;width:220px;flex-direction:column;align-items:stretch;
+      padding:16px 10px;transform:translateX(-100%);transition:transform .22s ease;z-index:150;
+      box-shadow:8px 0 30px #0008;
+    }
+    .navrail.open{transform:translateX(0);}
+    .navrail button{flex-direction:row;justify-content:flex-start;gap:10px;width:100%;padding:11px 10px;}
+    .navrail button span{font-size:13px;}
+    .navrail .logo{align-self:flex-start;margin-left:4px;}
+
+    .main-view-wrap{flex:1;min-height:0;overflow:hidden;}
+    .main-view{padding:16px;height:100%;}
+    .stats-grid{grid-template-columns:repeat(2,1fr);gap:10px;}
+    .proj-grid{grid-template-columns:1fr;gap:12px;}
+    .prod-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}
+    h1.page-title{font-size:19px;}
+
+    .editor,.editor-center{min-height:0;}
+    .editor{position:relative;height:100%;}
+    .scenes-panel{
+      position:fixed;top:0;left:0;bottom:0;width:84vw;max-width:320px;z-index:150;
+      transform:translateX(-105%);transition:transform .22s ease;box-shadow:8px 0 30px #0008;
+    }
+    .scenes-panel.open{transform:translateX(0);}
+    .props-panel{
+      position:fixed;top:0;right:0;bottom:0;width:88vw;max-width:340px;z-index:150;
+      transform:translateX(105%);transition:transform .22s ease;box-shadow:-8px 0 30px #0008;
+    }
+    .props-panel.open{transform:translateX(0);}
+    .editor-topbar{padding:8px 10px;gap:6px;}
+    .editor-topbar select.input{width:130px !important;font-size:12px;}
+    .editor-canvas-wrap{padding:14px;}
+    .btn-ghost span{display:inline;}
+
+    .modal-overlay{padding:10px;align-items:flex-end;}
+    .modal-box{width:100% !important;max-width:100%;max-height:92vh;border-radius:18px 18px 0 0;}
+
+    .card-actions{opacity:1;}
+    .scene-actions{opacity:1;}
+    .layer-actions{opacity:1;}
+  }
+  @media (max-width:520px){
+    .stats-grid{grid-template-columns:repeat(2,1fr);}
+    .prod-grid{grid-template-columns:repeat(auto-fill,minmax(135px,1fr));}
+    .style-grid{grid-template-columns:repeat(2,1fr);}
+    .editor-topbar select.input{width:100px !important;}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ============================== DATA / STATE ============================== */
+const T = { good:'#2E8B57', danger:'#C24545' };
+const MAX_VIDEO_SECONDS = 120;
+const FORMATS = [
+  { id:'1:1', label:'Feed 1:1', w:1080, h:1080 },
+  { id:'4:5', label:'Feed 4:5', w:1080, h:1350 },
+  { id:'9:16', label:'Stories / Reels 9:16', w:1080, h:1920 },
+  { id:'16:9', label:'Horizontal 16:9', w:1920, h:1080 },
+];
+const STYLE_PRESETS = {
+  minimal:  { name:'Minimalista', bg:'#FFFFFF', fg:'#14161D', border:'transparent', radius:6,  shadow:true,  weight:600 },
+  claro:    { name:'Claro',       bg:'#FFFFFFE6', fg:'#14161D', border:'#D9D4C6',   radius:10, shadow:false, weight:600 },
+  escuro:   { name:'Escuro',      bg:'#14161DF2', fg:'#FFFFFF', border:'transparent', radius:10, shadow:true, weight:600 },
+  premium:  { name:'Premium',     bg:'#14161D', fg:'#E0A63A', border:'#E0A63A',     radius:2,  shadow:true,  weight:700 },
+  moderno:  { name:'Moderno',     bg:'#3457D5', fg:'#FFFFFF', border:'transparent', radius:14, shadow:true,  weight:700 },
+  promocao: { name:'Promoção',    bg:'#C24545', fg:'#FFFFFF', border:'transparent', radius:4,  shadow:true,  weight:800 },
+};
+const CATEGORIES = ['Sala','Quarto','Cozinha','Escritório','Decoração','Móveis','Moda','Eletrônicos','Outros'];
+const TRANSITIONS = { fade:'Fade', cut:'Corte seco', 'slide-left':'Slide ←', 'slide-right':'Slide →', zoom:'Zoom' };
+const MOVEMENTS = {
+  auto:'Automático (variado)', 'zoom-in':'Zoom aproximando', 'zoom-out':'Zoom afastando',
+  'pan-lr':'Tour → (esq. p/ direita)', 'pan-rl':'Tour ← (direita p/ esq.)',
+  'pan-tb':'Tour ↓ (cima p/ baixo)', 'pan-bt':'Tour ↑ (baixo p/ cima)',
+  diagonal:'Zig-zag / Orbital', static:'Estático (sem movimento)',
+};
+const AUTO_MOVEMENT_CYCLE = ['zoom-in','pan-lr','pan-rl','zoom-out','diagonal','pan-tb','pan-bt'];
+const TEMPLATES = [
+  {id:'sala', name:'Sala de Estar', category:'Sala', format:'1:1', style:'moderno'},
+  {id:'quarto', name:'Quarto Aconchegante', category:'Quarto', format:'4:5', style:'claro'},
+  {id:'cozinha', name:'Cozinha Gourmet', category:'Cozinha', format:'1:1', style:'minimal'},
+  {id:'escritorio', name:'Home Office', category:'Escritório', format:'4:5', style:'escuro'},
+  {id:'moda', name:'Look do Dia', category:'Moda', format:'9:16', style:'premium'},
+  {id:'promo', name:'Oferta Relâmpago', category:'Promoções', format:'1:1', style:'promocao'},
+];
+
+const uid = () => Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4);
+const clamp = (v,a,b) => Math.min(b, Math.max(a, v));
+const fmtPrice = (v) => { const n = parseFloat(v); if (isNaN(n)) return 'R$ 0,00'; return 'R$ ' + n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); };
+const nowISO = () => new Date().toISOString();
+const fmtDate = (iso) => new Date(iso).toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'});
+const fmtMinSec = (sec) => { sec=Math.round(sec); const m=Math.floor(sec/60), s=sec%60; return `${m}:${String(s).padStart(2,'0')}`; };
+const esc = (s) => (s==null?'':String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function readFileAsDataURL(file, cb){ const r = new FileReader(); r.onload = () => cb(r.result); r.readAsDataURL(file); }
+function loadImage(src){ return new Promise((res,rej)=>{ const img=new Image(); img.onload=()=>res(img); img.onerror=rej; img.src=src; }); }
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+function newProduct(o={}) { return { id:uid(), name:'', image:null, price:'', promotionalPrice:'', sku:'', category:CATEGORIES[0], marketplace:'Loja própria', url:'', status:'active', createdAt:nowISO(), updatedAt:nowISO(), ...o }; }
+function newScene(o={}) { return { id:uid(), name:'Cena', image:null, imageFit:'contain', labels:[], texts:[], ...o }; }
+function newProject(name) { const scene = newScene({name:'Cena 01'}); return { id:uid(), name, createdAt:nowISO(), updatedAt:nowISO(), format:'1:1', scenes:[scene], activeSceneId:scene.id, defaultLabelStyle:null, videoConfig:null }; }
+function newLabel(productId, z, style) { return { id:uid(), productId, x:50, y:50, size:1, rotation:0, pointX:50, pointY:68, style:style||'minimal', displayMode:'price-name', connectorStyle:'dashed', visible:true, locked:false, zIndex:z }; }
+function newText(z) { return { id:uid(), text:'Novo texto', x:50, y:15, fontSize:32, color:'#FFFFFF', weight:700, align:'center', opacity:1, visible:true, locked:false, zIndex:z }; }
+
+const STATE = {
+  view:'dashboard',
+  products:[],
+  projects:[],
+  currentProjectId:null,
+  sel:null,
+  zoom:0.62,
+  toast:null,
+  modal:null,
+  productPickerTab:'existing',
+  videoPlaying:false,
+  mobileNavOpen:false,
+  mobileScenesOpen:false,
+  mobilePropsOpen:false,
+};
+
+function currentProject(){ return STATE.projects.find(p=>p.id===STATE.currentProjectId) || null; }
+function currentScene(){ const p = currentProject(); if(!p) return null; return p.scenes.find(s=>s.id===p.activeSceneId) || p.scenes[0]; }
+function productFor(id){ return STATE.products.find(p=>p.id===id); }
+function touchProject(p){ if(p) p.updatedAt = nowISO(); }
+
+function showToast(msg){ STATE.toast = msg; render(); clearTimeout(showToast._t); showToast._t = setTimeout(()=>{ STATE.toast=null; renderToastOnly(); }, 2200); }
+function renderToastOnly(){ const el = document.getElementById('toast-slot'); if(el) el.innerHTML = STATE.toast ? toastHTML() : ''; }
+
+/* ============================== ICONS ============================== */
+function icon(name, size=16){
+  const P = {
+    plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+    trash:'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+    copy:'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+    eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+    eyeoff:'<path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>',
+    lock:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+    unlock:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>',
+    chevleft:'<polyline points="15 18 9 12 15 6"/>',
+    chevright:'<polyline points="9 18 15 12 9 6"/>',
+    search:'<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+    upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>',
+    image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
+    tag:'<path d="M20.59 13.41L11 22.99a2 2 0 0 1-2.83 0L1.01 15.83a2 2 0 0 1 0-2.83L10.59 3.41A2 2 0 0 1 12 3H19a2 2 0 0 1 2 2v7a2 2 0 0 1-.41 1.41z"/><line x1="7" y1="7" x2="7.01" y2="7"/>',
+    extlink:'<polygon points="5 3 19 12 5 21 5 3"/>',
+    stop:'<rect x="5" y="5" width="14" height="14" rx="2"/>',
+    download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+    link:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+    settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 1.51-1H21a2 2 0 0 0 0-4h-.09A1.65 1.65 0 0 1 19.4 9a1.65 1.65 0 0 1 .33-1.82l.06-.06a2 2 0 1 0-2.83-2.83l-.06.06A1.65 1.65 0 0 1 15 4.6a1.65 1.65 0 0 1-1-1.51V3a2 2 0 0 0-4 0v.09a1.65 1.65 0 0 1-1 1.51 1.65 1.65 0 0 1-1.82-.33l-.06-.06a2 2 0 1 0-2.83 2.83l.06.06A1.65 1.65 0 0 1 4.6 9a1.65 1.65 0 0 1-1.51 1H3a2 2 0 0 0 0 4h.09A1.65 1.65 0 0 1 4.6 15a1.65 1.65 0 0 1-.33 1.82l-.06.06a2 2 0 1 0 2.83 2.83l.06-.06A1.65 1.65 0 0 1 9 19.4a1.65 1.65 0 0 1 1 1.51V21a2 2 0 0 0 4 0v-.09a1.65 1.65 0 0 1 1-1.51 1.65 1.65 0 0 1 1.82.33l.06.06a2 2 0 1 0 2.83-2.83l-.06-.06A1.65 1.65 0 0 1 19.4 15z"/>',
+    edit:'<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>',
+    x:'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+    check:'<polyline points="20 6 9 17 4 12"/>',
+    arrowup:'<line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>',
+    arrowdown:'<line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>',
+    type:'<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>',
+    layers:'<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
+    zoomin:'<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>',
+    zoomout:'<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/>',
+    maximize:'<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>',
+    rotate:'<polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>',
+    package:'<line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
+    folder:'<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>',
+    video:'<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>',
+    layout:'<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>',
+    grid:'<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>',
+    menu:'<line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>',
+    layers2:'<polygon points="12 2 2 7 12 12 22 7 12 2"/>',
+  };
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${P[name]||''}</svg>`;
+}
+function iconBtn(name, action, opts={}){
+  const {id='', size=16, title='', extra='', cls=''} = opts;
+  return `<button class="icon-btn ${cls}" data-action="${action}" data-id="${id}" title="${esc(title)}" ${extra}>${icon(name,size)}</button>`;
+}
+
+/* ============================== TOAST ============================== */
+function toastHTML(){ return STATE.toast ? `<div class="toast">${icon('check',14)} ${esc(STATE.toast)}</div>` : ''; }
+
+/* ============================== ROOT RENDER ============================== */
+function render(){
+  const app = document.getElementById('app');
+  const anyDrawerOpen = STATE.mobileNavOpen || STATE.mobileScenesOpen || STATE.mobilePropsOpen;
+  app.innerHTML = mobileTopbarHTML() + navRailHTML() +
+    (anyDrawerOpen ? `<div class="mobile-backdrop" data-action="close-drawers"></div>` : '') +
+    `<div class="main-view-wrap" style="flex:1;min-width:0;display:flex;flex-direction:column;">${viewHTML()}</div>` +
+    `<div id="toast-slot">${toastHTML()}</div>` + modalHTML();
+}
+
+function mobileTopbarHTML(){
+  const titles = {dashboard:'Dashboard', projects:'Projetos', products:'Produtos', videos:'Vídeos', 'video-studio':'Vídeo', templates:'Templates', editor:currentProject()?currentProject().name:'Editor'};
+  return `<div class="mobile-topbar">
+    <button class="icon-btn" data-action="toggle-mobile-nav">${icon('menu',20)}</button>
+    <span class="mobile-topbar-title truncate">${esc(titles[STATE.view]||'Menu')}</span>
+    <div style="width:30px;"></div>
+  </div>`;
+}
+
+function navRailHTML(){
+  const items = [
+    {id:'dashboard', icon:'grid', label:'Dashboard'},
+    {id:'projects', icon:'folder', label:'Projetos'},
+    {id:'products', icon:'package', label:'Produtos'},
+    {id:'videos', icon:'video', label:'Vídeos'},
+    {id:'templates', icon:'layout', label:'Templates'},
+  ];
+  return `<div class="navrail ${STATE.mobileNavOpen?'open':''}">
+    <div class="logo">${icon('tag',20)}</div>
+    ${items.map(it=>{
+      const active = STATE.view===it.id || (it.id==='videos' && STATE.view==='video-studio');
+      return `<button data-action="nav" data-id="${it.id}" class="${active?'active':''}">${icon(it.icon,18)}<span>${it.label}</span></button>`;
+    }).join('')}
+  </div>`;
+}
+
+function viewHTML(){
+  if(STATE.view==='dashboard') return dashboardHTML();
+  if(STATE.view==='projects') return projectsHTML();
+  if(STATE.view==='products') return productsHTML();
+  if(STATE.view==='videos') return videosHTML();
+  if(STATE.view==='video-studio') return currentProject() ? videoStudioHTML(currentProject()) : `<div class="main-view">Selecione um projeto.</div>`;
+  if(STATE.view==='templates') return templatesHTML();
+  if(STATE.view==='editor') return currentProject() ? editorHTML() : `<div class="main-view flex items-center justify-center" style="color:var(--ink3);">Selecione um projeto.</div>`;
+  return '';
+}
+
+/* ============================== DASHBOARD ============================== */
+function dashboardHTML(){
+  const projects = STATE.projects, products = STATE.products;
+  const totalScenes = projects.reduce((a,p)=>a+p.scenes.length,0);
+  const totalLabels = projects.reduce((a,p)=>a+p.scenes.reduce((b,s)=>b+s.labels.length,0),0);
+  const recent = [...projects].sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt)).slice(0,6);
+  return `<div class="main-view">
+    <div class="flex items-center justify-between" style="margin-bottom:28px;">
+      <div><h1 class="page-title">Dashboard</h1><p class="page-sub">Visão geral dos seus anúncios visuais.</p></div>
+      <button class="btn-primary" data-action="create-project">${icon('plus',16)} Criar novo anúncio</button>
+    </div>
+    <div class="stats-grid">
+      ${statCard(projects.length,'Projetos','#3457D5')}
+      ${statCard(products.length,'Produtos cadastrados','#E0A63A')}
+      ${statCard(totalScenes,'Cenas','#7C6FE0')}
+      ${statCard(totalLabels,'Etiquetas ativas','#2E8B57')}
+    </div>
+    <div class="flex items-center justify-between" style="margin-bottom:12px;">
+      <h2 style="font-family:var(--font-display);color:#fff;font-size:15px;margin:0;">Projetos recentes</h2>
+      <button data-action="nav" data-id="projects" style="color:var(--amber);font-size:12px;">Ver todos</button>
+    </div>
+    ${recent.length===0 ? emptyState('folder','Nenhum projeto ainda','Crie seu primeiro projeto, envie uma foto do ambiente ou produto e comece a posicionar etiquetas.','create-project','Criar projeto')
+      : `<div class="proj-grid">${recent.map(p=>projectCard(p,false)).join('')}</div>`}
+  </div>`;
+}
+function statCard(value,label,accent){
+  return `<div class="stat-card"><div class="stat-dot" style="background:${accent}"></div><div class="stat-value">${value}</div><div class="stat-label">${label}</div></div>`;
+}
+function emptyState(ic,title,text,action,actionLabel){
+  return `<div class="empty-state"><div style="color:var(--ink3);">${icon(ic,30)}</div><h3>${title}</h3><p>${text}</p>
+    ${action?`<button class="btn-primary" style="margin-top:16px;" data-action="${action}">${icon('plus',15)} ${actionLabel}</button>`:''}</div>`;
+}
+function projectCard(p, withActions){
+  const scene = p.scenes[0];
+  const totalLabels = p.scenes.reduce((a,s)=>a+s.labels.length,0);
+  return `<div class="card" data-action="open-project" data-id="${p.id}">
+    <div class="thumb">
+      ${scene && scene.image ? `<img src="${scene.image}"/>` : icon('image',26)}
+      ${withActions?`<div class="card-actions">
+        ${iconBtn('copy','duplicate-project',{id:p.id,size:14,title:'Duplicar'})}
+        ${confirmBtn('delete-project',p.id)}
+      </div>`:''}
+    </div>
+    <div class="body">
+      <div class="title truncate">${esc(p.name)}</div>
+      <div class="meta">${p.scenes.length} cena${p.scenes.length!==1?'s':''} · ${totalLabels} etiqueta${totalLabels!==1?'s':''} · atualizado ${fmtDate(p.updatedAt)}</div>
+    </div>
+  </div>`;
+}
+function confirmBtn(action,id){
+  return `<button class="icon-btn danger" data-armed="0" title="Excluir" onclick="event.stopPropagation();handleConfirmClick(this,'${action}','${id}')">${icon('trash',14)}</button>`;
+}
+function handleConfirmClick(btn, action, id){
+  if(btn.dataset.armed==='1'){ ACTIONS[action](id); return; }
+  btn.dataset.armed='1'; btn.style.background=T.danger; btn.style.color='#fff';
+  btn.innerHTML = icon('trash',14)+`<span style="font-size:10px;margin-left:4px;">Confirmar</span>`;
+  btn.style.width='auto'; btn.style.padding='0 8px';
+  setTimeout(()=>{ if(btn.dataset.armed==='1'){ btn.dataset.armed='0'; btn.style.background=''; btn.style.color=''; btn.style.width='30px'; btn.style.padding='0'; btn.innerHTML = icon('trash',14); } },2200);
+}
+
+/* ============================== PROJECTS ============================== */
+function projectsHTML(){
+  const projects = STATE.projects;
+  return `<div class="main-view">
+    <div class="flex items-center justify-between" style="margin-bottom:24px;">
+      <div><h1 class="page-title">Meus Projetos</h1><p class="page-sub">${projects.length} projeto${projects.length!==1?'s':''}</p></div>
+      <button class="btn-primary" data-action="open-modal" data-id="new-project">${icon('plus',16)} Novo projeto</button>
+    </div>
+    ${projects.length===0 ? emptyState('folder','Nenhum projeto ainda','Um projeto reúne as cenas, etiquetas e produtos de um anúncio.','open-modal-new-project','Criar projeto')
+      : `<div class="proj-grid">${projects.map(p=>projectCard(p,true)).join('')}</div>`}
+  </div>`;
+}
+
+/* ============================== PRODUCTS ============================== */
+let productsQuery='', productsCategory='Todas';
+function productsHTML(){
+  const filtered = filterProducts();
+  return `<div class="main-view">
+    <div class="flex items-center justify-between" style="margin-bottom:24px;">
+      <div><h1 class="page-title">Produtos</h1><p class="page-sub">Cadastre os produtos reais que serão usados nas etiquetas.</p></div>
+      <button class="btn-primary" data-action="open-product-editor" data-id="new">${icon('plus',16)} Adicionar produto</button>
+    </div>
+    <div class="flex gap-3" style="margin-bottom:18px;">
+      <div class="relative" style="max-width:280px;flex:1;">
+        <span style="position:absolute;left:10px;top:9px;color:var(--ink3);">${icon('search',14)}</span>
+        <input class="input" style="padding-left:30px;" value="${esc(productsQuery)}" placeholder="Pesquisar por nome ou SKU" oninput="productsQuery=this.value;rerenderProducts();"/>
+      </div>
+      <select class="input" style="width:180px;" onchange="productsCategory=this.value;rerenderProducts();">
+        <option ${productsCategory==='Todas'?'selected':''}>Todas</option>
+        ${CATEGORIES.map(c=>`<option ${productsCategory===c?'selected':''}>${c}</option>`).join('')}
+      </select>
+    </div>
+    <div id="products-grid-slot">${productsGridHTML(filtered)}</div>
+  </div>`;
+}
+function filterProducts(){
+  return STATE.products.filter(p=>{
+    const okQ = (p.name+p.sku).toLowerCase().includes(productsQuery.toLowerCase());
+    const okC = productsCategory==='Todas' || p.category===productsCategory;
+    return okQ && okC;
+  });
+}
+function productsGridHTML(filtered){
+  if(filtered.length===0) return emptyState('package', STATE.products.length===0?'Nenhum produto cadastrado':'Nada encontrado','Cada produto cadastrado aqui pode ser reutilizado em quantas etiquetas e anúncios você quiser.','open-product-editor-new','Adicionar produto');
+  return `<div class="prod-grid">${filtered.map(p=>`
+    <div class="prod-card" style="opacity:${p.status==='inactive'?0.55:1}">
+      <div class="img">${p.image?`<img src="${p.image}"/>`:icon('package',22)}</div>
+      <div class="name truncate">${esc(p.name)||'Sem nome'}</div>
+      <div class="sub">${esc(p.sku)||'sem SKU'} · ${esc(p.category)}</div>
+      <div class="price-row">
+        <span class="price-main">${fmtPrice(p.promotionalPrice||p.price)}</span>
+        ${p.promotionalPrice?`<span class="price-old">${fmtPrice(p.price)}</span>`:''}
+      </div>
+      <div class="mt-auto flex items-center justify-between">
+        <button class="status-pill ${p.status}" data-action="toggle-product-status" data-id="${p.id}">${p.status==='active'?'Ativo':'Inativo'}</button>
+        <div class="flex gap-1 items-center">
+          <button class="btn-ghost" style="padding:6px 10px;" data-action="open-product-editor" data-id="${p.id}">${icon('edit',12)} Editar</button>
+          ${confirmBtn('delete-product',p.id)}
+        </div>
+      </div>
+    </div>`).join('')}</div>`;
+}
+function rerenderProducts(){
+  const slot = document.getElementById('products-grid-slot');
+  if(slot) slot.innerHTML = productsGridHTML(filterProducts());
+}
+
+/* ============================== EDITOR ============================== */
+function editorHTML(){
+  const project = currentProject(), scene = currentScene();
+  const fmt = FORMATS.find(f=>f.id===project.format) || FORMATS[0];
+  return `<div class="editor">
+    ${scenesPanelHTML(project)}
+    <div class="editor-center">
+      ${editorTopbarHTML(project, fmt, scene)}
+      <div class="editor-canvas-wrap" id="canvas-wrap">${scene.image ? canvasStageHTML(scene, fmt) : uploadDropHTML(fmt)}</div>
+    </div>
+    ${STATE.sel ? propsPanelHTML(scene) : sidebarDefaultHTML(scene)}
+  </div>`;
+}
+
+function scenesPanelHTML(project){
+  return `<div class="scenes-panel ${STATE.mobileScenesOpen?'open':''}">
+    <div class="scenes-head">
+      ${iconBtn('chevleft','nav',{id:'projects',title:'Voltar'})}
+      <input value="${esc(project.name)}" onblur="ACTIONS['rename-project'](this.value)" onkeydown="if(event.key==='Enter')this.blur()"/>
+      <button class="icon-btn drawer-close-btn" data-action="close-drawers">${icon('x',18)}</button>
+    </div>
+    <div class="scenes-sub"><span>CENAS</span>${iconBtn('plus','add-scene',{title:'Adicionar cena'})}</div>
+    <div class="scenes-list">
+      ${project.scenes.map((s,i)=>`
+        <div class="scene-item ${s.id===project.activeSceneId?'active':''}" data-action="set-active-scene" data-id="${s.id}">
+          <div class="scene-thumb">${s.image?`<img src="${s.image}"/>`:icon('image',16)}</div>
+          <div class="scene-row">
+            <span>${i+1}. ${esc(s.name)}</span>
+            <div class="scene-actions">
+              ${iconBtn('chevleft','move-scene-left',{id:s.id,size:12})}
+              ${iconBtn('chevright','move-scene-right',{id:s.id,size:12})}
+              ${iconBtn('copy','duplicate-scene',{id:s.id,size:12})}
+              ${iconBtn('trash','delete-scene',{id:s.id,size:12,cls:'danger'})}
+            </div>
+          </div>
+        </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function editorTopbarHTML(project, fmt, scene){
+  const fit = scene.imageFit || 'cover';
+  return `<div class="editor-topbar">
+    <div class="flex items-center gap-2">
+      <button class="icon-btn mobile-only" data-action="toggle-scenes-panel" title="Cenas">${icon('layers2',18)}</button>
+      <select class="input" style="width:190px;" onchange="ACTIONS['set-format'](this.value)">
+        ${FORMATS.map(f=>`<option value="${f.id}" ${project.format===f.id?'selected':''}>${f.label} · ${f.w}×${f.h}</option>`).join('')}
+      </select>
+      <button class="btn-ghost" data-action="trigger-scene-upload">${icon('upload',13)} ${scene.image?'Trocar imagem':'Enviar imagem'}</button>
+      <input type="file" id="scene-file-input" accept="image/jpeg,image/png,image/webp" class="hidden" onchange="handleSceneFile(this.files[0])"/>
+      ${scene.image?`<div class="seg-btn-row" style="width:auto;" title="Como a imagem se ajusta ao formato escolhido">
+        <button class="seg-btn ${fit==='contain'?'selected':''}" style="padding:6px 10px;flex:none;" data-action="set-scene-fit" data-id="contain">Ver tudo</button>
+        <button class="seg-btn ${fit==='cover'?'selected':''}" style="padding:6px 10px;flex:none;" data-action="set-scene-fit" data-id="cover">Preencher</button>
+      </div>`:''}
+    </div>
+    <div class="flex items-center gap-1">
+      ${iconBtn('zoomout','zoom-out',{title:'Reduzir zoom'})}
+      <span style="font-size:11.5px;color:var(--ink3);width:40px;text-align:center;">${Math.round(STATE.zoom*100)}%</span>
+      ${iconBtn('zoomin','zoom-in',{title:'Aumentar zoom'})}
+      ${iconBtn('maximize','zoom-fit',{title:'Ajustar à tela'})}
+      <div style="width:1px;height:20px;background:var(--panel-soft);margin:0 6px;"></div>
+      <button class="btn-ghost desktop-only" data-action="open-interactive-preview">${icon('extlink',13)} Pré-visualizar interativo</button>
+      <button class="btn-ghost desktop-only" data-action="nav" data-id="video-studio-current">${icon('video',13)} Criar vídeo</button>
+      <button class="icon-btn mobile-only" data-action="open-interactive-preview" title="Pré-visualizar interativo">${icon('extlink',18)}</button>
+      <button class="icon-btn mobile-only" data-action="nav" data-id="video-studio-current" title="Criar vídeo">${icon('video',18)}</button>
+      <button class="btn-primary" style="padding:8px 14px;margin-left:4px;" data-action="open-export">${icon('download',13)} <span class="desktop-only">Exportar imagem</span></button>
+      <button class="icon-btn mobile-only" data-action="toggle-props-panel" title="Ferramentas">${icon('tag',18)}</button>
+    </div>
+  </div>`;
+}
+
+function uploadDropHTML(fmt){
+  const w = 420, h = Math.round(w*(fmt.h/fmt.w));
+  return `<div class="upload-drop" style="height:${h}px;" data-action="trigger-scene-upload">${icon('upload',26)}<span>Envie a imagem da cena (JPG, PNG ou WEBP)</span></div>`;
+}
+
+function canvasStageHTML(scene, fmt){
+  const baseW = 620, baseH = Math.round(baseW*(fmt.h/fmt.w));
+  const labels = [...scene.labels].sort((a,b)=>a.zIndex-b.zIndex);
+  const texts = [...scene.texts].sort((a,b)=>a.zIndex-b.zIndex);
+  const connectors = labels.filter(l=>l.visible).map(l=>{
+    const selected = STATE.sel && STATE.sel.type==='label' && STATE.sel.id===l.id;
+    return `<line x1="${l.x}" y1="${l.y}" x2="${l.pointX}" y2="${l.pointY}" stroke="${selected?'#E0A63A':'#FFFFFFCC'}" stroke-width="0.25"
+      stroke-dasharray="${l.connectorStyle==='dashed'?'1.2,1':'0'}" vector-effect="non-scaling-stroke"/>`;
+  }).join('');
+
+  const labelEls = labels.filter(l=>l.visible).map(l=>{
+    const product = productFor(l.productId);
+    const preset = STYLE_PRESETS[l.style];
+    const selected = STATE.sel && STATE.sel.type==='label' && STATE.sel.id===l.id;
+    let content = '';
+    const price = fmtPrice(product && (product.promotionalPrice||product.price));
+    const name = (product && product.name) || 'Produto';
+    const sku = (product && product.sku) || '—';
+    if(l.displayMode==='price-name') content = `<span style="font-family:var(--font-mono);font-size:${13*l.size}px;font-weight:${preset.weight};">${price} <span style="opacity:.85;font-family:var(--font-body);">· ${esc(name)}</span></span>`;
+    else if(l.displayMode==='name-price') content = `<div><div style="font-size:${11.5*l.size}px;font-weight:500;opacity:.9;">${esc(name)}</div><div style="font-family:var(--font-mono);font-size:${14*l.size}px;font-weight:${preset.weight};">${price}</div></div>`;
+    else content = `<div><div style="font-size:${11.5*l.size}px;font-weight:500;opacity:.9;">${esc(name)}</div><div style="font-family:var(--font-mono);font-size:${14*l.size}px;font-weight:${preset.weight};">${price}</div><div style="font-family:var(--font-mono);font-size:${9*l.size}px;opacity:.65;">SKU: ${esc(sku)}</div></div>`;
+
+    return `<div class="cv-point" data-drag="point" data-id="${l.id}" style="left:${l.pointX}%;top:${l.pointY}%;background:${selected?'#E0A63A':'#fff'};border:2px solid #3457D5;"></div>
+      <div class="cv-label" data-drag="move" data-id="${l.id}" style="left:${l.x}%;top:${l.y}%;transform:translate(-50%,-50%) rotate(${l.rotation}deg);z-index:${100+l.zIndex};
+        outline:${selected?'2px solid #E0A63A':'none'};outline-offset:3px;border-radius:${preset.radius+4}px;">
+        <div class="box" style="background:${preset.bg};color:${preset.fg};border:${preset.border!=='transparent'?'1.4px solid '+preset.border:'none'};
+          border-radius:${preset.radius}px;padding:${7*l.size}px ${12*l.size}px;box-shadow:${preset.shadow?'0 6px 18px #0000004d':'none'};">${content}</div>
+        ${selected ? `<div class="cv-resize" data-drag="resize" data-id="${l.id}"></div>` : ''}
+      </div>`;
+  }).join('');
+
+  const textEls = texts.filter(t=>t.visible).map(t=>{
+    const selected = STATE.sel && STATE.sel.type==='text' && STATE.sel.id===t.id;
+    return `<div class="cv-text" data-drag="move" data-id="${t.id}" data-kind="text" style="left:${t.x}%;top:${t.y}%;transform:translate(-50%,-50%);z-index:${100+t.zIndex};
+      outline:${selected?'2px solid #E0A63A':'none'};outline-offset:4px;text-align:${t.align};opacity:${t.opacity};max-width:${baseW*0.85}px;white-space:pre-wrap;">
+      <span style="font-family:var(--font-display);color:${t.color};font-size:${t.fontSize*(baseW/1080)*1.8}px;font-weight:${t.weight};">${esc(t.text)}</span>
+      ${selected ? `<div class="cv-resize" data-drag="resizeText" data-id="${t.id}"></div>` : ''}
+    </div>`;
+  }).join('');
+
+  return `<div style="transform:scale(${STATE.zoom});transform-origin:center center;">
+    <div class="canvas-stage" id="canvas-stage" data-action="deselect" style="width:${baseW}px;height:${baseH}px;">
+      <img class="scene-bg" src="${scene.image}" style="object-fit:${scene.imageFit||'cover'};"/>
+      <svg class="absolute" style="inset:0;width:100%;height:100%;pointer-events:none;" viewBox="0 0 100 100" preserveAspectRatio="none">${connectors}</svg>
+      ${labelEls}
+      ${textEls}
+    </div>
+  </div>`;
+}
+
+function sidebarDefaultHTML(scene){
+  const items = [
+    ...scene.labels.map(l=>({...l,kind:'label'})),
+    ...scene.texts.map(t=>({...t,kind:'text'})),
+  ].sort((a,b)=>b.zIndex-a.zIndex);
+  return `<div class="props-panel ${STATE.mobilePropsOpen?'open':''}">
+    <div class="layers-add">
+      <div class="flex items-center justify-between">
+        <span style="color:#fff;font-size:13px;font-weight:600;">Ferramentas</span>
+        <button class="icon-btn drawer-close-btn" data-action="close-drawers">${icon('x',18)}</button>
+      </div>
+      <button class="btn-primary" style="justify-content:center;" data-action="open-product-picker">${icon('tag',15)} Adicionar produto / etiqueta</button>
+      <button class="btn-secondary" style="justify-content:center;background:var(--ink-soft);" data-action="add-text">${icon('type',15)} Adicionar texto</button>
+    </div>
+    <div class="layers-list">
+      <div class="layers-title">${icon('layers',13)}<span>CAMADAS</span></div>
+      ${items.length===0?`<p style="color:var(--ink3);font-size:12px;padding:8px 4px;">Nenhuma etiqueta ou texto nesta cena ainda.</p>`:''}
+      ${items.map(it=>{
+        const label = it.kind==='label' ? ((productFor(it.productId)||{}).name || 'Produto sem nome') : it.text;
+        return `<div class="layer-row" data-action="select-layer" data-kind="${it.kind}" data-id="${it.id}">
+          ${icon(it.kind==='label'?'tag':'type',12)}
+          <span class="label-txt">${esc(label)}</span>
+          <div class="layer-actions">
+            ${iconBtn('arrowup','reorder-up',{id:it.id,size:12,extra:`data-kind="${it.kind}"`})}
+            ${iconBtn('arrowdown','reorder-down',{id:it.id,size:12,extra:`data-kind="${it.kind}"`})}
+            ${iconBtn(it.visible?'eye':'eyeoff','toggle-visible',{id:it.id,size:12,extra:`data-kind="${it.kind}"`})}
+            ${iconBtn(it.locked?'lock':'unlock','toggle-locked',{id:it.id,size:12,extra:`data-kind="${it.kind}"`})}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+function propsPanelHTML(scene){
+  const sel = STATE.sel;
+  const obj = sel.type==='label' ? scene.labels.find(l=>l.id===sel.id) : scene.texts.find(t=>t.id===sel.id);
+  if(!obj){ STATE.sel=null; return sidebarDefaultHTML(scene); }
+  const product = sel.type==='label' ? productFor(obj.productId) : null;
+
+  let body = '';
+  if(sel.type==='label' && product){
+    body += `<div class="product-mini">
+      ${product.image?`<img src="${product.image}"/>`:`<div class="ph">${icon('package',16)}</div>`}
+      <div style="min-width:0;flex:1;">
+        <div style="color:#fff;font-size:12.5px;font-weight:600;" class="truncate">${esc(product.name)}</div>
+        <div style="color:var(--amber);font-size:12.5px;font-family:var(--font-mono);">${fmtPrice(product.promotionalPrice||product.price)}</div>
+        <div class="flex items-center gap-1" style="color:var(--ink3);font-size:10.5px;margin-top:2px;">${icon('link',10)} link salvo (não exibido)</div>
+      </div>
+      <button class="icon-btn" title="Editar produto" data-action="open-product-editor" data-id="${product.id}">${icon('edit',14)}</button>
+    </div>`;
+  }
+  if(sel.type==='label' && !product){
+    body += `<div class="product-mini"><div class="ph">${icon('package',16)}</div><div style="color:var(--ink3);font-size:12px;">Produto não encontrado (pode ter sido excluído).</div></div>`;
+  }
+
+  if(sel.type==='label'){
+    body += field('Exibição da etiqueta', `<select class="input" onchange="ACTIONS['patch-obj']('displayMode',this.value)">
+        <option value="price-name" ${obj.displayMode==='price-name'?'selected':''}>Preço · Nome</option>
+        <option value="name-price" ${obj.displayMode==='name-price'?'selected':''}>Nome / Preço</option>
+        <option value="full" ${obj.displayMode==='full'?'selected':''}>Nome / Preço / SKU</option>
+      </select>`);
+    body += field('Estilo', `<div class="style-grid">${Object.entries(STYLE_PRESETS).map(([k,v])=>
+      `<button class="style-swatch ${obj.style===k?'selected':''}" style="background:${v.bg};color:${v.fg};" data-action="patch-obj" data-key="style" data-val="${k}">${v.name}</button>`).join('')}</div>`);
+    body += field('Linha conectora', `<div class="seg-btn-row">
+      <button class="seg-btn ${obj.connectorStyle==='dashed'?'selected':''}" data-action="patch-obj" data-key="connectorStyle" data-val="dashed">Tracejada</button>
+      <button class="seg-btn ${obj.connectorStyle==='solid'?'selected':''}" data-action="patch-obj" data-key="connectorStyle" data-val="solid">Sólida</button>
+    </div>`);
+    body += field(`Tamanho: ${Math.round(obj.size*100)}%`, `<input type="range" min="0.5" max="3" step="0.05" value="${obj.size}" class="w-full" oninput="ACTIONS['patch-obj']('size',parseFloat(this.value))"/>`);
+  }
+
+  if(sel.type==='text'){
+    body += field('Conteúdo', `<textarea class="input" rows="3" style="resize:vertical;" oninput="ACTIONS['patch-obj']('text',this.value)">${esc(obj.text)}</textarea>`);
+    body += field('Cor do texto', `<input type="color" value="${obj.color}" style="width:100%;height:34px;border-radius:8px;border:none;" oninput="ACTIONS['patch-obj']('color',this.value)"/>`);
+    body += field('Alinhamento', `<div class="seg-btn-row">${['left','center','right'].map(a=>`<button class="seg-btn ${obj.align===a?'selected':''}" data-action="patch-obj" data-key="align" data-val="${a}" style="text-transform:capitalize;">${a}</button>`).join('')}</div>`);
+    body += field(`Peso da fonte: ${obj.weight}`, `<input type="range" min="400" max="800" step="100" value="${obj.weight}" class="w-full" oninput="ACTIONS['patch-obj']('weight',parseInt(this.value))"/>`);
+    body += field(`Opacidade: ${Math.round(obj.opacity*100)}%`, `<input type="range" min="0.1" max="1" step="0.05" value="${obj.opacity}" class="w-full" oninput="ACTIONS['patch-obj']('opacity',parseFloat(this.value))"/>`);
+    body += field(`Tamanho da fonte: ${Math.round(obj.fontSize)}px`, `<input type="range" min="10" max="140" value="${obj.fontSize}" class="w-full" oninput="ACTIONS['patch-obj']('fontSize',parseInt(this.value))"/>`);
+  }
+
+  body += field(`Rotação: ${obj.rotation}°`, `<div class="flex items-center gap-2">
+    <input type="range" min="-45" max="45" value="${obj.rotation}" class="w-full" oninput="ACTIONS['patch-obj']('rotation',parseInt(this.value))"/>
+    ${iconBtn('rotate','reset-rotation',{title:'Resetar rotação'})}</div>`);
+
+  body += `<div class="quick-actions">
+    <button class="btn-ghost" data-action="duplicate-selected">${icon('copy',13)} Duplicar</button>
+    <button class="btn-ghost" data-action="toggle-visible-selected">${icon(obj.visible?'eyeoff':'eye',13)} ${obj.visible?'Ocultar':'Mostrar'}</button>
+    <button class="btn-ghost" data-action="toggle-locked-selected">${icon(obj.locked?'unlock':'lock',13)} ${obj.locked?'Destravar':'Travar'}</button>
+  </div>
+  <button class="btn-danger-soft w-full" style="margin-top:8px;display:flex;align-items:center;justify-content:center;gap:6px;" data-action="delete-selected">${icon('trash',13)} Excluir</button>`;
+
+  return `<div class="props-panel open">
+    <div class="props-head"><span>${sel.type==='label'?'Etiqueta':'Texto'}</span>${iconBtn('x','deselect-btn',{title:'Fechar'})}</div>
+    <div class="props-body">${body}</div>
+  </div>`;
+}
+function field(label, inner){ return `<div class="field"><span class="field-label">${label}</span>${inner}</div>`; }
+
+/* ============================== VIDEOS ============================== */
+function videosHTML(){
+  const projects = STATE.projects;
+  if(projects.length===0) return `<div class="main-view">
+    <h1 class="page-title">Vídeos</h1><p class="page-sub">Monte um carrossel de cenas e gere um vídeo real, com transições, direto no navegador — sem serviço externo.</p>
+    ${emptyState('video','Nenhum projeto disponível','Crie um projeto com cenas e imagens primeiro — depois volte aqui para montar o vídeo.','create-project','Criar projeto')}
+  </div>`;
+  return `<div class="main-view">
+    <h1 class="page-title">Vídeos</h1><p class="page-sub">Escolha um projeto para montar o carrossel de cenas em vídeo (até 2 minutos).</p>
+    <div class="proj-grid" style="margin-top:20px;">${projects.map(p=>`
+      <div class="card" data-action="open-video-studio" data-id="${p.id}">
+        <div class="thumb">${p.scenes[0] && p.scenes[0].image?`<img src="${p.scenes[0].image}"/>`:icon('image',26)}</div>
+        <div class="body"><div class="title truncate">${esc(p.name)}</div><div class="meta">${p.scenes.length} cena${p.scenes.length!==1?'s':''}</div></div>
+      </div>`).join('')}</div>
+  </div>`;
+}
+
+function ensureVideoConfig(project){
+  if(!project.videoConfig) project.videoConfig = { order:[], settings:{}, speed:1 };
+  const vc = project.videoConfig;
+  const known = new Set(vc.order);
+  project.scenes.forEach(s=>{
+    if(!known.has(s.id)) vc.order.push(s.id);
+    if(!vc.settings[s.id]) vc.settings[s.id] = { included:true, duration:4, transition:'fade', movement:'auto' };
+    else if(vc.settings[s.id].movement===undefined) vc.settings[s.id].movement = 'auto';
+  });
+  vc.order = vc.order.filter(id=>project.scenes.some(s=>s.id===id));
+  Object.keys(vc.settings).forEach(id=>{ if(!project.scenes.some(s=>s.id===id)) delete vc.settings[id]; });
+  return vc;
+}
+function videoTotalSeconds(project){
+  const vc = ensureVideoConfig(project);
+  return vc.order.filter(id=>vc.settings[id].included).reduce((a,id)=>a+vc.settings[id].duration,0);
+}
+
+function videoStudioHTML(project){
+  const vc = ensureVideoConfig(project);
+  const totalSec = videoTotalSeconds(project);
+  const pct = clamp(totalSec/MAX_VIDEO_SECONDS,0,1);
+  const disabled = STATE.videoPlaying ? 'disabled' : '';
+  return `<div class="editor">
+    <div class="scenes-panel ${STATE.mobileScenesOpen?'open':''}" style="width:290px;">
+      <div class="scenes-head">${iconBtn('chevleft','nav',{id:'videos',title:'Voltar'})}<span style="color:#fff;font-size:13.5px;font-weight:600;" class="truncate">${esc(project.name)}</span><button class="icon-btn drawer-close-btn" data-action="close-drawers">${icon('x',18)}</button></div>
+      <div class="scenes-sub"><span>CENAS NO VÍDEO</span></div>
+      <div class="scenes-list">
+        ${vc.order.map((id,i)=>{
+          const s = project.scenes.find(x=>x.id===id); const set = vc.settings[id];
+          return `<div class="video-scene-row" style="background:${set.included?'var(--panel-soft)':'transparent'};border:1px solid ${set.included?'transparent':'var(--panel-soft)'};border-radius:12px;padding:8px;opacity:${set.included?1:0.55};">
+            <div class="flex items-center gap-2">
+              <input type="checkbox" ${set.included?'checked':''} ${disabled} onchange="ACTIONS['toggle-video-scene']('${id}',this.checked)"/>
+              <div class="scene-thumb" style="width:44px;height:34px;flex-shrink:0;margin:0;">${s.image?`<img src="${s.image}"/>`:icon('image',12)}</div>
+              <span style="font-size:11.5px;color:#fff;flex:1;" class="truncate">${i+1}. ${esc(s.name)}</span>
+              <div class="flex gap-1">
+                ${iconBtn('arrowup','move-video-scene',{id, size:11, extra:`data-dir="-1" ${disabled}`})}
+                ${iconBtn('arrowdown','move-video-scene',{id, size:11, extra:`data-dir="1" ${disabled}`})}
+              </div>
+            </div>
+            <div class="flex items-center gap-2" style="margin-top:6px;">
+              <span style="font-size:10.5px;color:var(--ink3);">Duração</span>
+              <input type="number" min="1" max="60" value="${set.duration}" class="input" style="width:56px;padding:4px 6px;font-size:11px;" ${disabled} onchange="ACTIONS['set-video-duration']('${id}',this.value)"/>
+              <span style="font-size:10.5px;color:var(--ink3);">s</span>
+            </div>
+            <div class="flex items-center gap-2" style="margin-top:6px;">
+              <span style="font-size:10.5px;color:var(--ink3);white-space:nowrap;">Movimento</span>
+              <select class="input" style="padding:4px 6px;font-size:11px;" ${disabled} onchange="ACTIONS['set-video-movement']('${id}',this.value)">
+                ${Object.entries(MOVEMENTS).map(([k,v])=>`<option value="${k}" ${(set.movement||'auto')===k?'selected':''}>${v}</option>`).join('')}
+              </select>
+            </div>
+            ${i<vc.order.length-1 && set.included ? `<div class="flex items-center gap-2" style="margin-top:6px;">
+              <span style="font-size:10.5px;color:var(--ink3);white-space:nowrap;">Transição</span>
+              <select class="input" style="padding:4px 6px;font-size:11px;" ${disabled} onchange="ACTIONS['set-video-transition']('${id}',this.value)">
+                ${Object.entries(TRANSITIONS).map(([k,v])=>`<option value="${k}" ${set.transition===k?'selected':''}>${v}</option>`).join('')}
+              </select>
+            </div>` : ''}
+          </div>`;
+        }).join('')}
+        ${vc.order.length===0?`<p style="color:var(--ink3);font-size:12px;padding:8px;">Este projeto ainda não tem cenas.</p>`:''}
+      </div>
+    </div>
+
+    <div class="editor-center">
+      <div class="editor-topbar">
+        <div class="flex items-center gap-2">
+          <button class="icon-btn mobile-only" data-action="toggle-scenes-panel" title="Cenas">${icon('layers2',18)}</button>
+          <span style="font-size:12.5px;color:var(--ink3);">Duração total:</span>
+          <span style="font-family:var(--font-mono);font-size:13px;color:${pct>=1?'#C24545':pct>0.85?'#E0A63A':'#fff'};" id="video-total-label">${fmtMinSec(totalSec)} / 2:00</span>
+          <div style="width:120px;height:5px;background:var(--panel-soft);border-radius:99px;overflow:hidden;margin-left:6px;" class="desktop-only">
+            <div style="width:${pct*100}%;height:100%;background:${pct>=1?'#C24545':'#3457D5'};"></div>
+          </div>
+        </div>
+        <div class="flex items-center gap-1">
+          <span style="font-size:11px;color:var(--ink3);margin-right:4px;" class="desktop-only">Velocidade</span>
+          ${[0.5,1,1.5,2].map(sp=>`<button class="seg-btn ${vc.speed===sp?'selected':''}" style="padding:6px 10px;flex:none;" ${disabled} data-action="set-video-speed" data-id="${sp}">${sp}x</button>`).join('')}
+          <div style="width:1px;height:20px;background:var(--panel-soft);margin:0 8px;" class="desktop-only"></div>
+          <button class="btn-ghost" id="video-play-btn" data-action="play-video-preview">${icon(STATE.videoPlaying&&!STATE.videoRecording?'stop':'extlink',13)} <span class="desktop-only">${STATE.videoPlaying&&!STATE.videoRecording?'Parar':'Reproduzir prévia'}</span></button>
+          <button class="btn-primary" style="padding:8px 14px;margin-left:4px;" id="video-export-btn" data-action="export-video" ${STATE.videoPlaying&&!STATE.videoRecording?'disabled':''}>${icon('download',13)} <span class="desktop-only">Exportar vídeo</span></button>
+          <button class="icon-btn mobile-only" data-action="toggle-props-panel" title="Como funciona">${icon('layers',18)}</button>
+        </div>
+      </div>
+      <div class="editor-canvas-wrap">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+          <canvas id="video-preview-canvas" width="640" height="640" style="max-width:66vw;max-height:58vh;border-radius:10px;box-shadow:0 20px 60px #0009;background:#000;"></canvas>
+          <div id="video-status" style="color:var(--ink3);font-size:12px;min-height:16px;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="props-panel ${STATE.mobilePropsOpen?'open':''}" style="width:260px;">
+      <div class="props-head"><span>Como funciona</span>${iconBtn('x','close-drawers',{title:'Fechar'})}</div>
+      <div class="props-body" style="font-size:12px;color:var(--ink3);line-height:1.65;">
+        <p>O vídeo é gerado de verdade no seu navegador, cena por cena, com as transições escolhidas — sem serviço externo.</p>
+        <p style="margin-top:10px;">Duração máxima do carrossel: <b style="color:#fff;">2 minutos</b>.</p>
+        <p style="margin-top:10px;">A gravação acontece em tempo real (respeitando a velocidade escolhida): um vídeo de 20s a 1x leva cerca de 20s para ser gerado; a 2x, cerca de 10s.</p>
+        <p style="margin-top:10px;">Formato exportado: <b style="color:#fff;">.webm</b> (compatível com Chrome, Edge e Firefox).</p>
+      </div>
+    </div>
+  </div>`;
+}
+
+function templatesHTML(){
+  return `<div class="main-view">
+    <h1 class="page-title">Templates</h1><p class="page-sub">Comece um projeto já configurado com formato e estilo de etiqueta — depois é só enviar sua imagem e cadastrar seus produtos.</p>
+    <div class="prod-grid" style="margin-top:20px;">${TEMPLATES.map(t=>{
+      const preset = STYLE_PRESETS[t.style];
+      return `<div class="prod-card">
+        <div class="img" style="background:${preset.bg};display:flex;align-items:center;justify-content:center;">
+          <span style="color:${preset.fg};font-family:var(--font-display);font-weight:700;font-size:13px;text-align:center;padding:0 10px;">${t.name}</span>
+        </div>
+        <div class="name">${t.name}</div>
+        <div class="sub">${t.category} · formato ${t.format}</div>
+        <button class="btn-primary" style="justify-content:center;margin-top:8px;" data-action="use-template" data-id="${t.id}">${icon('plus',14)} Usar template</button>
+      </div>`;
+    }).join('')}</div>
+  </div>`;
+}
+
+/* ============================== MODALS ============================== */
+function modalHTML(){
+  if(!STATE.modal) return '';
+  const m = STATE.modal;
+  if(m.type==='new-project') return modalWrap('Novo projeto', newProjectModalBody(), 400);
+  if(m.type==='product-editor') return modalWrap(m.product.name ? 'Editar produto' : 'Novo produto', productEditorBody(m.product), 460);
+  if(m.type==='product-picker') return modalWrap('Adicionar etiqueta de produto', productPickerBody(), 460);
+  if(m.type==='export') return modalWrap('Exportar imagem', exportModalBody(), 420);
+  if(m.type==='interactive') return modalWrap('Experiência interativa — pré-visualização', interactiveModalBody(), 480);
+  return '';
+}
+function modalWrap(title, body, width){
+  return `<div class="modal-overlay" data-action="close-modal">
+    <div class="modal-box" style="width:${width}px;" data-action="noop">
+      <div class="modal-head"><h3>${title}</h3><button data-action="close-modal">${icon('x',18)}</button></div>
+      <div class="modal-body" id="modal-body-slot">${body}</div>
+    </div>
+  </div>`;
+}
+function rerenderModalBody(html){ const el = document.getElementById('modal-body-slot'); if(el) el.innerHTML = html; }
+
+function newProjectModalBody(){
+  return `<div class="field"><span class="field-label">Nome do projeto</span>
+    <input class="input" id="new-project-name" placeholder="Ex: Coleção Sala de Estar — Agosto" onkeydown="if(event.key==='Enter')ACTIONS['submit-new-project']()"/></div>
+    <button class="btn-primary w-full" style="justify-content:center;margin-top:8px;" data-action="submit-new-project">Criar e abrir editor</button>`;
+}
+
+let draftProduct = null;
+function productEditorBody(product){
+  draftProduct = {...product};
+  return renderProductEditorFields(draftProduct, false);
+}
+function renderProductEditorFields(p, forPicker){
+  return `<div class="flex gap-3" style="margin-bottom:2px;">
+    <div>
+      <div class="cursor-pointer" data-action="trigger-product-image" style="width:${forPicker?72:96}px;height:${forPicker?72:96}px;border-radius:12px;background:var(--ink-soft);border:1px dashed var(--panel-soft);display:flex;align-items:center;justify-content:center;overflow:hidden;">
+        ${p.image?`<img src="${p.image}" style="width:100%;height:100%;object-fit:cover;"/>`:icon('upload',18)}
+      </div>
+      <input type="file" id="product-image-input" accept="image/*" class="hidden" onchange="handleProductImage(this.files[0], ${forPicker})"/>
+    </div>
+    <div class="flex-1">
+      <div class="field"><span class="field-label">Nome do produto</span><input class="input" value="${esc(p.name)}" placeholder="Ex: Luminária Decorativa" oninput="draftProduct.name=this.value"/></div>
+      ${!forPicker?`<div class="field"><span class="field-label">Categoria</span><select class="input" onchange="draftProduct.category=this.value">${CATEGORIES.map(c=>`<option ${p.category===c?'selected':''}>${c}</option>`).join('')}</select></div>`:''}
+    </div>
+  </div>
+  <div class="grid" style="grid-template-columns:1fr 1fr;gap:12px;">
+    <div class="field"><span class="field-label">Preço (R$)</span><input class="input" type="number" step="0.01" value="${esc(p.price)}" placeholder="229.90" oninput="draftProduct.price=this.value"/></div>
+    <div class="field"><span class="field-label">${forPicker?'SKU':'Preço promocional (opcional)'}</span>
+      ${forPicker ? `<input class="input" value="${esc(p.sku)}" placeholder="CAD-001" style="font-family:var(--font-mono);" oninput="draftProduct.sku=this.value"/>`
+        : `<input class="input" type="number" step="0.01" value="${esc(p.promotionalPrice)}" placeholder="199.90" oninput="draftProduct.promotionalPrice=this.value"/>`}
+    </div>
+    ${!forPicker?`<div class="field"><span class="field-label">Código / SKU</span><input class="input" value="${esc(p.sku)}" placeholder="LUM-001" style="font-family:var(--font-mono);" oninput="draftProduct.sku=this.value"/></div>
+    <div class="field"><span class="field-label">Marketplace</span><input class="input" value="${esc(p.marketplace)}" placeholder="Loja própria" oninput="draftProduct.marketplace=this.value"/></div>`:''}
+  </div>
+  <div class="field"><span class="field-label">Link do produto (não aparece na arte)</span><input class="input" value="${esc(p.url)}" placeholder="https://minhaloja.com/luminaria" oninput="draftProduct.url=this.value"/></div>
+  ${!forPicker?`<div class="field"><span class="field-label">Status</span><select class="input" onchange="draftProduct.status=this.value">
+      <option value="active" ${p.status==='active'?'selected':''}>Ativo</option><option value="inactive" ${p.status==='inactive'?'selected':''}>Inativo</option></select></div>`:''}
+  <button class="btn-primary w-full" style="justify-content:center;margin-top:6px;" data-action="${forPicker?'submit-inline-product':'submit-product-editor'}">
+    ${forPicker?'Cadastrar e criar etiqueta':'Salvar produto'}</button>`;
+}
+function handleProductImage(file, forPicker){ if(!file) return; readFileAsDataURL(file,(d)=>{ draftProduct.image=d; rerenderModalBody(renderProductEditorFields(draftProduct, forPicker)); }); }
+
+function productPickerBody(){
+  return `<div class="tabbar">
+      <button class="${STATE.productPickerTab==='existing'?'selected':''}" data-action="picker-tab" data-id="existing">Produto existente</button>
+      <button class="${STATE.productPickerTab==='new'?'selected':''}" data-action="picker-tab" data-id="new">Cadastrar novo</button>
+    </div>
+    <div id="picker-tab-body">${STATE.productPickerTab==='existing' ? pickerExistingBody('') : pickerNewBody()}</div>`;
+}
+function pickerExistingBody(query){
+  const list = STATE.products.filter(p=>p.status==='active');
+  const filtered = list.filter(p=>p.name.toLowerCase().includes(query.toLowerCase()));
+  return `<div class="relative" style="margin-bottom:12px;">
+      <span style="position:absolute;left:10px;top:9px;color:var(--ink3);">${icon('search',14)}</span>
+      <input class="input" style="padding-left:30px;" value="${esc(query)}" placeholder="Buscar produto cadastrado" oninput="filterPicker(this.value)"/>
+    </div>
+    <div id="picker-list" style="max-height:288px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;">${pickerListHTML(filtered)}</div>`;
+}
+function pickerListHTML(filtered){
+  if(filtered.length===0) return `<p style="color:var(--ink3);font-size:13px;text-align:center;padding:24px 0;">Nenhum produto ativo encontrado. Cadastre um novo produto na aba ao lado.</p>`;
+  return filtered.map(p=>`<div class="flex items-center gap-2_5 cursor-pointer" style="background:var(--ink-soft);border-radius:12px;padding:8px;" data-action="pick-product" data-id="${p.id}">
+    ${p.image?`<img src="${p.image}" style="width:38px;height:38px;border-radius:8px;object-fit:cover;"/>`:`<div style="width:38px;height:38px;border-radius:8px;background:var(--panel-soft);display:flex;align-items:center;justify-content:center;">${icon('package',15)}</div>`}
+    <div style="min-width:0;flex:1;"><div class="truncate" style="color:#fff;font-size:12.5px;font-weight:600;">${esc(p.name)}</div><div style="color:var(--ink3);font-size:11px;">${esc(p.sku)||'sem SKU'}</div></div>
+    <span style="color:var(--amber);font-size:12.5px;font-family:var(--font-mono);">${fmtPrice(p.promotionalPrice||p.price)}</span>
+  </div>`).join('');
+}
+function filterPicker(q){ const list = STATE.products.filter(p=>p.status==='active'); const el=document.getElementById('picker-list'); if(el) el.innerHTML = pickerListHTML(list.filter(p=>p.name.toLowerCase().includes(q.toLowerCase()))); }
+function pickerNewBody(){ draftProduct = newProduct(); return renderProductEditorFields(draftProduct, true); }
+
+function exportModalBody(){
+  const project = currentProject();
+  const fmt = FORMATS.find(f=>f.id===project.format)||FORMATS[0];
+  return `<div class="field"><span class="field-label">Formato</span>
+    <select class="input" onchange="ACTIONS['set-format'](this.value)">
+      ${FORMATS.map(f=>`<option value="${f.id}" ${f.id===fmt.id?'selected':''}>${f.label} · ${f.w}×${f.h}</option>`).join('')}
+    </select></div>
+    <div class="field"><span class="field-label">Tipo de arquivo</span>
+      <div class="seg-btn-row">
+        <button class="seg-btn selected" id="ft-png" data-action="set-filetype" data-id="png" style="text-transform:uppercase;">png</button>
+        <button class="seg-btn" id="ft-jpg" data-action="set-filetype" data-id="jpg" style="text-transform:uppercase;">jpg</button>
+      </div></div>
+    <p style="color:var(--ink3);font-size:11.5px;line-height:1.5;margin-bottom:14px;">Os links dos produtos ficam salvos apenas internamente — nenhuma URL é desenhada sobre a imagem exportada.</p>
+    <button class="btn-primary w-full" style="justify-content:center;" id="export-btn" data-action="do-export">${icon('download',15)} Baixar imagem</button>`;
+}
+let exportFileType = 'png';
+
+function interactiveModalBody(){
+  const scene = currentScene();
+  return `<p style="color:var(--ink3);font-size:11.5px;line-height:1.5;margin-bottom:12px;">
+    Simulação da rota <code style="font-family:var(--font-mono);color:var(--amber);">/anuncio/:id</code>. Ao publicar de verdade, cada etiqueta abre o link real do produto.</p>
+    <div class="relative" style="aspect-ratio:1/1;border-radius:12px;overflow:hidden;background:#000;">
+      <img src="${scene.image}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${scene.imageFit||'cover'};"/>
+      ${scene.labels.filter(l=>l.visible).map(l=>{
+        const product = productFor(l.productId); const preset = STYLE_PRESETS[l.style];
+        const price = fmtPrice(product&&(product.promotionalPrice||product.price));
+        const name = esc(product&&product.name);
+        const sku = esc(product&&product.sku || '—');
+        let inner = '';
+        if(l.displayMode==='price-name') inner = `<span style="font-family:var(--font-mono);">${price}</span> <span style="opacity:.85;">· ${name}</span>`;
+        else if(l.displayMode==='name-price') inner = `<div style="font-size:10.5px;font-weight:500;opacity:.9;">${name}</div><div style="font-family:var(--font-mono);">${price}</div>`;
+        else inner = `<div style="font-size:10.5px;font-weight:500;opacity:.9;">${name}</div><div style="font-family:var(--font-mono);">${price}</div><div style="font-family:var(--font-mono);font-size:9.5px;opacity:.65;">SKU: ${sku}</div>`;
+        return `<a href="${esc(product&&product.url||'#')}" target="_blank" rel="noreferrer" class="absolute" style="left:${l.x}%;top:${l.y}%;transform:translate(-50%,-50%);">
+          <div style="background:${preset.bg};color:${preset.fg};border-radius:${preset.radius}px;padding:6px 11px;font-size:12px;font-weight:${preset.weight};box-shadow:0 4px 14px #0006;cursor:pointer;line-height:1.3;">
+            ${inner}</div></a>`;
+      }).join('')}
+    </div>
+    <p style="color:var(--ink3);font-size:11px;margin-top:10px;">Clique em uma etiqueta para abrir o link do produto em uma nova aba.</p>`;
+}
+
+/* ============================== ACTIONS ============================== */
+const ACTIONS = {
+  'nav': (id) => {
+    if(STATE.videoPlaying){ showToast('Aguarde o vídeo terminar'); return; }
+    STATE.mobileNavOpen=false; STATE.mobileScenesOpen=false; STATE.mobilePropsOpen=false;
+    if(id==='video-studio-current'){ if(!currentProject()){ return; } STATE.view='video-studio'; STATE.sel=null; render(); return; }
+    STATE.view = id; if(id!=='editor' && id!=='video-studio') STATE.currentProjectId = (id==='videos'||id==='templates') ? STATE.currentProjectId : null;
+    if(id==='dashboard'||id==='projects'||id==='products') STATE.currentProjectId=null;
+    STATE.sel=null; render();
+  },
+  'create-project': () => { const p = newProject('Projeto sem título'); STATE.projects.unshift(p); STATE.currentProjectId=p.id; STATE.view='editor'; STATE.sel=null; render(); },
+  'open-project': (id) => { STATE.currentProjectId=id; STATE.view='editor'; STATE.sel=null; render(); },
+  'delete-project': (id) => { STATE.projects = STATE.projects.filter(p=>p.id!==id); if(STATE.currentProjectId===id){STATE.currentProjectId=null;STATE.view='projects';} render(); },
+  'duplicate-project': (id) => {
+    const p = STATE.projects.find(x=>x.id===id); if(!p) return;
+    const copy = {...p, id:uid(), name:p.name+' (cópia)', createdAt:nowISO(), updatedAt:nowISO(),
+      scenes:p.scenes.map(s=>({...s,id:uid(),labels:s.labels.map(l=>({...l,id:uid()})),texts:s.texts.map(t=>({...t,id:uid()}))})),
+      videoConfig:null };
+    copy.activeSceneId = copy.scenes[0].id;
+    STATE.projects.unshift(copy); render();
+  },
+  'open-modal': (id) => { if(id==='new-project'){ STATE.modal={type:'new-project'}; render(); setTimeout(()=>{const el=document.getElementById('new-project-name'); if(el) el.focus();},0);} },
+  'open-modal-new-project': () => ACTIONS['open-modal']('new-project'),
+  'close-modal': () => { STATE.modal=null; render(); },
+  'submit-new-project': () => {
+    const el = document.getElementById('new-project-name');
+    const name = (el?el.value:'').trim() || 'Projeto sem título';
+    const p = newProject(name); STATE.projects.unshift(p); STATE.currentProjectId=p.id; STATE.modal=null; STATE.view='editor'; STATE.sel=null; render();
+  },
+
+  'open-product-editor': (id) => { STATE.modal={type:'product-editor', product: id==='new' ? newProduct() : STATE.products.find(p=>p.id===id)}; render(); },
+  'open-product-editor-new': () => ACTIONS['open-product-editor']('new'),
+  'trigger-product-image': () => { const el=document.getElementById('product-image-input'); if(el) el.click(); },
+  'submit-product-editor': () => {
+    if(!draftProduct.name){ showToast('Informe o nome do produto'); return; }
+    const exists = STATE.products.some(x=>x.id===draftProduct.id);
+    if(exists) STATE.products = STATE.products.map(x=>x.id===draftProduct.id?{...draftProduct,updatedAt:nowISO()}:x);
+    else STATE.products.unshift({...draftProduct, id:draftProduct.id||uid(), updatedAt:nowISO()});
+    STATE.modal=null; render(); showToast('Produto salvo');
+  },
+  'toggle-product-status': (id) => { STATE.products = STATE.products.map(p=>p.id===id?{...p,status:p.status==='active'?'inactive':'active'}:p); rerenderProducts(); },
+  'delete-product': (id) => { STATE.products = STATE.products.filter(p=>p.id!==id); rerenderProducts(); showToast('Produto excluído'); },
+
+  'add-scene': () => { const p = currentProject(); const s = newScene({name:`Cena ${String(p.scenes.length+1).padStart(2,'0')}`}); p.scenes.push(s); p.activeSceneId=s.id; touchProject(p); STATE.sel=null; render(); },
+  'duplicate-scene': (id) => { const p = currentProject(); const s = p.scenes.find(x=>x.id===id); const copy = {...s,id:uid(),name:s.name+' (cópia)', labels:s.labels.map(l=>({...l,id:uid()})), texts:s.texts.map(t=>({...t,id:uid()}))}; p.scenes.push(copy); p.activeSceneId=copy.id; touchProject(p); render(); },
+  'delete-scene': (id) => { const p = currentProject(); if(p.scenes.length<=1){ showToast('O projeto precisa de ao menos 1 cena'); return; } p.scenes = p.scenes.filter(s=>s.id!==id); if(p.activeSceneId===id) p.activeSceneId=p.scenes[0].id; touchProject(p); render(); },
+  'set-active-scene': (id) => { currentProject().activeSceneId = id; STATE.sel=null; render(); },
+  'move-scene-left': (id) => moveScene(id,-1), 'move-scene-right': (id) => moveScene(id,1),
+  'rename-project': (val) => { const p = currentProject(); if(!p) return; p.name = val.trim()||'Projeto sem título'; touchProject(p); },
+
+  'trigger-scene-upload': () => { const el = document.getElementById('scene-file-input'); if(el) el.click(); },
+  'set-format': (id) => { currentProject().format = id; touchProject(currentProject()); render(); },
+  'set-scene-fit': (id) => { const s = currentScene(); if(!s) return; s.imageFit = id; touchProject(currentProject()); render(); showToast('Modo alterado — se as etiquetas ficarem fora do produto, arraste o ponto indicador de novo'); },
+  'zoom-in': () => { STATE.zoom = clamp(STATE.zoom+0.1,0.2,2); render(); },
+  'zoom-out': () => { STATE.zoom = clamp(STATE.zoom-0.1,0.2,2); render(); },
+  'zoom-fit': () => {
+    const project = currentProject(), scene = currentScene();
+    if(project && scene){
+      const fmt = FORMATS.find(f=>f.id===project.format)||FORMATS[0];
+      const baseW = 620, baseH = Math.round(baseW*(fmt.h/fmt.w));
+      const wrap = document.getElementById('canvas-wrap');
+      const availW = (wrap?wrap.clientWidth:620) - 40, availH = (wrap?wrap.clientHeight:620) - 40;
+      STATE.zoom = clamp(Math.min(availW/baseW, availH/baseH), 0.2, 1.4);
+    } else { STATE.zoom = 0.62; }
+    render();
+  },
+
+  'open-product-picker': () => { STATE.productPickerTab = STATE.products.length ? 'existing' : 'new'; STATE.modal={type:'product-picker'}; render(); },
+  'picker-tab': (id) => { STATE.productPickerTab = id; rerenderModalBody(id==='existing' ? pickerExistingBody('') : pickerNewBody()); },
+  'pick-product': (id) => { addLabelForProduct(id); },
+  'submit-inline-product': () => {
+    if(!draftProduct.name || !draftProduct.price){ showToast('Informe nome e preço do produto'); return; }
+    const p = {...draftProduct, id: uid()};
+    STATE.products.unshift(p);
+    addLabelForProduct(p.id);
+  },
+
+  'add-text': () => { const s = currentScene(); const z = maxZ(s)+1; const t = newText(z); s.texts.push(t); STATE.sel={type:'text',id:t.id}; touchProject(currentProject()); render(); },
+  'select-layer': (id, el) => { const kind = el.dataset.kind; STATE.sel = {type:kind,id}; render(); },
+  'deselect': () => { STATE.sel=null; render(); },
+  'deselect-btn': () => { STATE.sel=null; render(); },
+  'reorder-up': (id, el) => reorder({type:el.dataset.kind,id}, 1),
+  'reorder-down': (id, el) => reorder({type:el.dataset.kind,id}, -1),
+  'toggle-visible': (id, el) => patchByKind(el.dataset.kind, id, o=>({visible:!o.visible})),
+  'toggle-locked': (id, el) => patchByKind(el.dataset.kind, id, o=>({locked:!o.locked})),
+
+  'patch-obj': (key, val) => { patchSelected({[key]: val}); },
+  'reset-rotation': () => patchSelected({rotation:0}),
+  'duplicate-selected': () => duplicateSelected(),
+  'toggle-visible-selected': () => { const o = getSelectedObj(); patchSelected({visible:!o.visible}); },
+  'toggle-locked-selected': () => { const o = getSelectedObj(); patchSelected({locked:!o.locked}); },
+  'delete-selected': () => deleteSelected(),
+
+  'open-export': () => { exportFileType='png'; STATE.modal={type:'export'}; render(); },
+  'set-filetype': (id) => { exportFileType=id; const a=document.getElementById('ft-png'), b=document.getElementById('ft-jpg'); if(a)a.classList.toggle('selected',id==='png'); if(b)b.classList.toggle('selected',id==='jpg'); },
+  'do-export': () => doExport(),
+  'open-interactive-preview': () => { STATE.modal={type:'interactive'}; render(); },
+
+  'open-video-studio': (id) => { STATE.currentProjectId=id; STATE.view='video-studio'; STATE.sel=null; render(); },
+  'toggle-video-scene': (id, checked) => {
+    if(STATE.videoPlaying) return;
+    const project = currentProject(); const vc = ensureVideoConfig(project);
+    vc.settings[id].included = !!checked;
+    const total = videoTotalSeconds(project);
+    if(total>MAX_VIDEO_SECONDS){ vc.settings[id].duration = Math.max(1, vc.settings[id].duration-(total-MAX_VIDEO_SECONDS)); }
+    touchProject(project); render();
+  },
+  'set-video-duration': (id, val) => {
+    if(STATE.videoPlaying) return;
+    const project = currentProject(); const vc = ensureVideoConfig(project);
+    let v = clamp(parseInt(val)||1,1,60);
+    const others = videoTotalSeconds(project) - (vc.settings[id].included ? vc.settings[id].duration : 0);
+    const maxAllowed = Math.max(1, MAX_VIDEO_SECONDS - others);
+    vc.settings[id].duration = Math.min(v, maxAllowed);
+    touchProject(project); render();
+  },
+  'set-video-transition': (id, val) => { if(STATE.videoPlaying) return; const project=currentProject(); ensureVideoConfig(project).settings[id].transition = val; touchProject(project); },
+  'set-video-movement': (id, val) => { if(STATE.videoPlaying) return; const project=currentProject(); ensureVideoConfig(project).settings[id].movement = val; touchProject(project); },
+  'move-video-scene': (id, el) => {
+    if(STATE.videoPlaying) return;
+    const dir = parseInt(el.dataset.dir); const project=currentProject(); const vc=ensureVideoConfig(project);
+    const idx=vc.order.indexOf(id); const j=idx+dir; if(j<0||j>=vc.order.length) return;
+    [vc.order[idx],vc.order[j]]=[vc.order[j],vc.order[idx]]; touchProject(project); render();
+  },
+  'set-video-speed': (sp) => { if(STATE.videoPlaying) return; const project=currentProject(); ensureVideoConfig(project).speed=parseFloat(sp); touchProject(project); render(); },
+  'play-video-preview': () => {
+    if(STATE.videoPlaying){ STATE.videoPlaying=false; return; }
+    runTimeline(currentProject(), {record:false});
+  },
+  'export-video': () => {
+    if(STATE.videoPlaying){ showToast('Aguarde a operação atual terminar'); return; }
+    runTimeline(currentProject(), {record:true});
+  },
+
+  'use-template': (id) => {
+    const tpl = TEMPLATES.find(t=>t.id===id); if(!tpl) return;
+    const p = newProject(`${tpl.name} — novo projeto`);
+    p.format = tpl.format; p.defaultLabelStyle = tpl.style;
+    STATE.projects.unshift(p); STATE.currentProjectId=p.id; STATE.view='editor'; STATE.sel=null; render();
+    showToast('Projeto criado a partir do template. Envie a imagem para começar.');
+  },
+
+  'toggle-mobile-nav': () => { STATE.mobileNavOpen = !STATE.mobileNavOpen; STATE.mobileScenesOpen=false; STATE.mobilePropsOpen=false; render(); },
+  'toggle-scenes-panel': () => { STATE.mobileScenesOpen = !STATE.mobileScenesOpen; STATE.mobileNavOpen=false; STATE.mobilePropsOpen=false; render(); },
+  'toggle-props-panel': () => { STATE.mobilePropsOpen = !STATE.mobilePropsOpen; STATE.mobileNavOpen=false; STATE.mobileScenesOpen=false; render(); },
+  'close-drawers': () => { STATE.mobileNavOpen=false; STATE.mobileScenesOpen=false; STATE.mobilePropsOpen=false; render(); },
+};
+
+document.addEventListener('click', (e) => {
+  if(e.target.closest('[data-drag]')) return;
+  const el = e.target.closest('[data-action]');
+  if(!el) return;
+  const action = el.dataset.action;
+  if(action==='patch-obj' && el.dataset.key){ patchSelected({[el.dataset.key]: el.dataset.val}); return; }
+  if(!ACTIONS[action]) return;
+  const id = el.dataset.id;
+  ACTIONS[action](id, el);
+});
+
+function moveScene(id, dir){
+  const p = currentProject(); const idx = p.scenes.findIndex(s=>s.id===id); const j = idx+dir;
+  if(j<0||j>=p.scenes.length) return;
+  const arr = p.scenes; [arr[idx],arr[j]] = [arr[j],arr[idx]]; touchProject(p); render();
+}
+function maxZ(s){ return Math.max(0, ...s.labels.map(l=>l.zIndex), ...s.texts.map(t=>t.zIndex)); }
+function addLabelForProduct(productId){
+  const s = currentScene(); const project = currentProject();
+  const l = newLabel(productId, maxZ(s)+1, project.defaultLabelStyle);
+  s.labels.push(l);
+  STATE.sel = {type:'label', id:l.id}; touchProject(project); STATE.modal=null; render();
+}
+function patchByKind(kind, id, fn){
+  const s = currentScene(); const arr = kind==='label'?s.labels:s.texts;
+  const o = arr.find(x=>x.id===id); if(!o) return; Object.assign(o, fn(o)); touchProject(currentProject()); render();
+}
+function getSelectedObj(){ const s = currentScene(); const sel = STATE.sel; if(!s||!sel) return null; return sel.type==='label' ? s.labels.find(l=>l.id===sel.id) : s.texts.find(t=>t.id===sel.id); }
+function patchSelected(patch){ const o = getSelectedObj(); if(!o) return; Object.assign(o, patch); touchProject(currentProject()); render(); }
+function reorder(sel, dir){
+  const s = currentScene(); const arr = sel.type==='label' ? s.labels : s.texts;
+  const sorted = [...arr].sort((a,b)=>a.zIndex-b.zIndex);
+  const idx = sorted.findIndex(o=>o.id===sel.id); const j = idx+dir;
+  if(j<0||j>=sorted.length) return;
+  const tmp = sorted[idx].zIndex; sorted[idx].zIndex = sorted[j].zIndex; sorted[j].zIndex = tmp;
+  touchProject(currentProject()); render();
+}
+function duplicateSelected(){
+  const s = currentScene(); const sel = STATE.sel; const o = getSelectedObj(); if(!o) return;
+  const copy = {...o, id:uid(), x:clamp(o.x+4,2,98), y:clamp(o.y+4,2,98), zIndex:maxZ(s)+1};
+  if(sel.type==='label') s.labels.push(copy); else s.texts.push(copy);
+  STATE.sel = {type:sel.type, id:copy.id}; touchProject(currentProject()); render();
+}
+function deleteSelected(){
+  const s = currentScene(); const sel = STATE.sel; if(!sel) return;
+  if(sel.type==='label') s.labels = s.labels.filter(l=>l.id!==sel.id); else s.texts = s.texts.filter(t=>t.id!==sel.id);
+  STATE.sel=null; touchProject(currentProject()); render();
+}
+function handleSceneFile(file){ if(!file) return; readFileAsDataURL(file,(d)=>{ currentScene().image=d; touchProject(currentProject()); render(); setTimeout(()=>ACTIONS['zoom-fit'](),0); }); }
+
+/* ============================== DRAG (labels / points / resize / text) ============================== */
+let dragCtx = null;
+document.addEventListener('pointerdown', (e) => {
+  const el = e.target.closest('[data-drag]');
+  if(!el) return;
+  e.stopPropagation();
+  const kind = el.dataset.drag, id = el.dataset.id;
+  const s = currentScene(); if(!s) return;
+  let obj = s.labels.find(l=>l.id===id) || s.texts.find(t=>t.id===id);
+  if(!obj) return;
+  const type = s.labels.includes(obj) ? 'label' : 'text';
+  if(obj.locked){ STATE.sel = {type, id}; render(); return; }
+  STATE.sel = {type, id};
+  const stage = document.getElementById('canvas-stage');
+  if(!stage) return;
+  const rect = stage.getBoundingClientRect();
+  dragCtx = { kind, id, type, rect, startClientX:e.clientX, startClientY:e.clientY, start:{...obj} };
+  render();
+  window.addEventListener('pointermove', onDragMove);
+  window.addEventListener('pointerup', onDragEnd);
+});
+function onDragMove(e){
+  if(!dragCtx) return;
+  const d = dragCtx;
+  const dxPct = ((e.clientX-d.startClientX)/d.rect.width)*100;
+  const dyPct = ((e.clientY-d.startClientY)/d.rect.height)*100;
+  const s = currentScene(); if(!s) return;
+  const arr = d.type==='label' ? s.labels : s.texts;
+  const obj = arr.find(o=>o.id===d.id);
+  if(!obj) return;
+  if(d.kind==='move'){ obj.x = clamp(d.start.x+dxPct,1,99); obj.y = clamp(d.start.y+dyPct,1,99); }
+  else if(d.kind==='point'){ obj.pointX = clamp(d.start.pointX+dxPct,0,100); obj.pointY = clamp(d.start.pointY+dyPct,0,100); }
+  else if(d.kind==='resize'){ const delta=(e.clientX-d.startClientX)/d.rect.width; obj.size = clamp(d.start.size+delta*2.2,0.5,3); }
+  else if(d.kind==='resizeText'){ const delta=(e.clientX-d.startClientX); obj.fontSize = clamp(d.start.fontSize+delta*0.35,10,140); }
+  renderCanvasOnly();
+}
+function onDragEnd(){
+  if(dragCtx) touchProject(currentProject());
+  dragCtx=null;
+  window.removeEventListener('pointermove', onDragMove);
+  window.removeEventListener('pointerup', onDragEnd);
+  render();
+}
+function renderCanvasOnly(){
+  const wrap = document.getElementById('canvas-wrap');
+  const project = currentProject(), scene = currentScene();
+  if(!project || !scene) return;
+  const fmt = FORMATS.find(f=>f.id===project.format)||FORMATS[0];
+  if(wrap) wrap.innerHTML = canvasStageHTML(scene, fmt);
+}
+
+/* ============================== SHARED CANVAS-2D DRAWING (image export + video frames) ============================== */
+function roundRect(ctx,x,y,w,h,r){ r=Math.min(r,w/2,h/2); ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function drawCover(ctx, img, W, H){
+  const ir = img.width/img.height, cr = W/H;
+  let dw,dh,dx,dy;
+  if(ir>cr){ dh=H; dw=H*ir; dx=(W-dw)/2; dy=0; } else { dw=W; dh=W/ir; dx=0; dy=(H-dh)/2; }
+  ctx.drawImage(img,dx,dy,dw,dh);
+}
+function drawContain(ctx, img, W, H){
+  ctx.fillStyle = '#000'; ctx.fillRect(0,0,W,H);
+  const ir = img.width/img.height, cr = W/H;
+  let dw,dh,dx,dy;
+  if(ir>cr){ dw=W; dh=W/ir; dx=0; dy=(H-dh)/2; } else { dh=H; dw=H*ir; dy=0; dx=(W-dw)/2; }
+  ctx.drawImage(img,dx,dy,dw,dh);
+}
+function drawSceneToCanvas(ctx, img, W, H, scene){
+  if((scene.imageFit||'cover')==='cover') drawCover(ctx, img, W, H);
+  else drawContain(ctx, img, W, H);
+  const scaleF = W/1080;
+  const sortedLabels = [...scene.labels].filter(l=>l.visible).sort((a,b)=>a.zIndex-b.zIndex);
+  for(const l of sortedLabels){
+    const product = productFor(l.productId); const preset = STYLE_PRESETS[l.style];
+    const px=(l.x/100)*W, py=(l.y/100)*H, ppx=(l.pointX/100)*W, ppy=(l.pointY/100)*H;
+
+    ctx.save(); ctx.strokeStyle='#FFFFFFCC'; ctx.lineWidth=2*scaleF;
+    if(l.connectorStyle==='dashed') ctx.setLineDash([8*scaleF,6*scaleF]);
+    ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(ppx,ppy); ctx.stroke(); ctx.restore();
+    ctx.fillStyle='#fff'; ctx.strokeStyle='#3457D5'; ctx.lineWidth=3*scaleF;
+    ctx.beginPath(); ctx.arc(ppx,ppy,7*scaleF,0,Math.PI*2); ctx.fill(); ctx.stroke();
+
+    const priceTxt = fmtPrice(product && (product.promotionalPrice||product.price));
+    const nameTxt = (product && product.name) || 'Produto';
+    const skuTxt = 'SKU: ' + ((product && product.sku) || '—');
+    let lines=[]; const fs = 15*scaleF*l.size;
+    if(l.displayMode==='price-name') lines=[{t:`${priceTxt} · ${nameTxt}`, fs, w:preset.weight}];
+    else if(l.displayMode==='name-price') lines=[{t:nameTxt,fs:fs*0.78,w:500},{t:priceTxt,fs:fs*1.05,w:preset.weight}];
+    else lines=[{t:nameTxt,fs:fs*0.78,w:500},{t:priceTxt,fs:fs*1.05,w:preset.weight},{t:skuTxt,fs:fs*0.62,w:500}];
+
+    const padX=16*scaleF*l.size, padY=10*scaleF*l.size;
+    let maxW=0; lines.forEach(ln=>{ ctx.font=`${ln.w} ${ln.fs}px Inter, sans-serif`; maxW=Math.max(maxW, ctx.measureText(ln.t).width); });
+    const boxW=maxW+padX*2, boxH=lines.reduce((a,ln)=>a+ln.fs*1.35,0)+padY*2-(lines[0].fs*0.35);
+    const bx=px-boxW/2, by=py-boxH/2;
+
+    ctx.save();
+    if(preset.shadow){ ctx.shadowColor='#00000055'; ctx.shadowBlur=14*scaleF; ctx.shadowOffsetY=6*scaleF; }
+    ctx.fillStyle = preset.bg.length>7 ? preset.bg.slice(0,7) : preset.bg;
+    roundRect(ctx,bx,by,boxW,boxH,preset.radius*scaleF); ctx.fill();
+    if(preset.border!=='transparent'){ ctx.shadowColor='transparent'; ctx.strokeStyle=preset.border; ctx.lineWidth=1.5*scaleF; roundRect(ctx,bx,by,boxW,boxH,preset.radius*scaleF); ctx.stroke(); }
+    ctx.restore();
+
+    ctx.textBaseline='top'; ctx.textAlign='left'; ctx.fillStyle=preset.fg;
+    let cy=by+padY;
+    lines.forEach(ln=>{ ctx.font=`${ln.w} ${ln.fs}px Inter, sans-serif`; ctx.fillText(ln.t, bx+padX, cy); cy += ln.fs*1.35; });
+  }
+  for(const t of [...scene.texts].filter(x=>x.visible).sort((a,b)=>a.zIndex-b.zIndex)){
+    ctx.save(); ctx.globalAlpha=t.opacity; ctx.fillStyle=t.color;
+    ctx.font=`${t.weight} ${t.fontSize*scaleF}px 'Space Grotesk', sans-serif`;
+    ctx.textAlign=t.align; ctx.textBaseline='middle';
+    ctx.fillText(t.text, (t.x/100)*W, (t.y/100)*H);
+    ctx.restore();
+  }
+}
+
+/* ============================== IMAGE EXPORT ============================== */
+async function doExport(){
+  const project = currentProject(), scene = currentScene();
+  if(!scene || !scene.image){ showToast('Envie uma imagem para a cena primeiro'); return; }
+  const btn = document.getElementById('export-btn'); if(btn){ btn.style.opacity=0.6; btn.textContent='Gerando arquivo...'; }
+  const fmt = FORMATS.find(f=>f.id===project.format)||FORMATS[0];
+  try{
+    const img = await loadImage(scene.image);
+    const W=fmt.w, H=fmt.h;
+    const canvas = document.createElement('canvas'); canvas.width=W; canvas.height=H;
+    const ctx = canvas.getContext('2d');
+    drawSceneToCanvas(ctx, img, W, H, scene);
+    const mime = exportFileType==='jpg' ? 'image/jpeg' : 'image/png';
+    const dataUrl = canvas.toDataURL(mime, 0.95);
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `${project.name.replace(/\s+/g,'-').toLowerCase()}-${scene.name.replace(/\s+/g,'-').toLowerCase()}-${fmt.id.replace(':','x')}.${exportFileType}`;
+    a.click();
+    showToast('Imagem exportada com sucesso');
+  } finally {
+    if(btn){ btn.style.opacity=1; btn.innerHTML = icon('download',15)+' Baixar imagem'; }
+  }
+}
+
+/* ============================== VIDEO TIMELINE (preview + real export via MediaRecorder) ============================== */
+function updateVideoStatus(text){
+  const el=document.getElementById('video-status'); if(el) el.textContent=text||'';
+  const playBtn=document.getElementById('video-play-btn');
+  if(playBtn) playBtn.innerHTML = (STATE.videoPlaying && !STATE.videoRecording) ? (icon('stop',13)+' Parar') : (icon('extlink',13)+' Reproduzir prévia');
+  const exportBtn=document.getElementById('video-export-btn');
+  if(exportBtn) exportBtn.disabled = STATE.videoPlaying;
+}
+function getMotionOffset(type, p){
+  switch(type){
+    case 'zoom-in': return { s: 1 + 0.22*p, ox:0, oy:0 };
+    case 'zoom-out': return { s: 1.22 - 0.22*p, ox:0, oy:0 };
+    case 'pan-lr': return { s: 1.16, ox: -0.075 + 0.15*p, oy:0 };
+    case 'pan-rl': return { s: 1.16, ox: 0.075 - 0.15*p, oy:0 };
+    case 'pan-tb': return { s: 1.16, ox:0, oy: -0.075 + 0.15*p };
+    case 'pan-bt': return { s: 1.16, ox:0, oy: 0.075 - 0.15*p };
+    case 'diagonal': return { s: 1.18 + 0.03*Math.sin(p*Math.PI*2), ox: 0.07*Math.sin(p*Math.PI*2), oy: 0.06*Math.cos(p*Math.PI*2) };
+    case 'static': return { s:1, ox:0, oy:0 };
+    default: return { s: 1 + 0.22*p, ox:0, oy:0 };
+  }
+}
+function holdSceneWithMotion(ctx, img, W, H, scene, durMs, movement){
+  return new Promise(resolve=>{
+    const start = performance.now();
+    function step(now){
+      if(!STATE.videoPlaying){ resolve(); return; }
+      const p = clamp((now-start)/durMs,0,1);
+      const {s, ox, oy} = getMotionOffset(movement, p);
+      ctx.clearRect(0,0,W,H);
+      ctx.save();
+      ctx.translate(W*ox, H*oy);
+      ctx.translate(W/2,H/2); ctx.scale(s,s); ctx.translate(-W/2,-H/2);
+      drawSceneToCanvas(ctx, img, W, H, scene);
+      ctx.restore();
+      if(p<1 && STATE.videoPlaying) requestAnimationFrame(step); else resolve();
+    }
+    requestAnimationFrame(step);
+  });
+}
+function animateTransition(ctx, imgA, imgB, W, H, durMs, type, sceneA, sceneB){
+  return new Promise(resolve=>{
+    if(durMs<=0 || type==='cut'){ ctx.clearRect(0,0,W,H); drawSceneToCanvas(ctx,imgB,W,H,sceneB); resolve(); return; }
+    const start = performance.now();
+    function step(now){
+      if(!STATE.videoPlaying){ resolve(); return; }
+      const p = clamp((now-start)/durMs,0,1);
+      ctx.clearRect(0,0,W,H);
+      if(type==='fade'){
+        ctx.globalAlpha=1; drawSceneToCanvas(ctx,imgA,W,H,sceneA);
+        ctx.globalAlpha=p; drawSceneToCanvas(ctx,imgB,W,H,sceneB); ctx.globalAlpha=1;
+      } else if(type==='slide-left' || type==='slide-right'){
+        const dir = type==='slide-left'? -1: 1;
+        ctx.save(); ctx.beginPath(); ctx.rect(0,0,W,H); ctx.clip();
+        ctx.save(); ctx.translate(dir*p*W,0); drawSceneToCanvas(ctx,imgA,W,H,sceneA); ctx.restore();
+        ctx.save(); ctx.translate(dir*p*W - dir*W,0); drawSceneToCanvas(ctx,imgB,W,H,sceneB); ctx.restore();
+        ctx.restore();
+      } else if(type==='zoom'){
+        ctx.globalAlpha=1; drawSceneToCanvas(ctx,imgA,W,H,sceneA);
+        ctx.globalAlpha=p;
+        ctx.save(); const s=1.15-0.15*p; ctx.translate(W/2,H/2); ctx.scale(s,s); ctx.translate(-W/2,-H/2);
+        drawSceneToCanvas(ctx,imgB,W,H,sceneB); ctx.restore(); ctx.globalAlpha=1;
+      } else {
+        drawSceneToCanvas(ctx,imgB,W,H,sceneB);
+      }
+      if(p<1) requestAnimationFrame(step); else resolve();
+    }
+    requestAnimationFrame(step);
+  });
+}
+
+async function runTimeline(project, {record}={record:false}){
+  if(!project) return;
+  const vc = ensureVideoConfig(project);
+  const includedIds = vc.order.filter(id=>vc.settings[id].included);
+  if(includedIds.length===0){ showToast('Selecione ao menos uma cena para o vídeo'); return; }
+  const scenesData = includedIds.map(id=>project.scenes.find(s=>s.id===id));
+  if(scenesData.some(s=>!s.image)){ showToast('Todas as cenas selecionadas precisam ter uma imagem'); return; }
+  if(record && (typeof MediaRecorder==='undefined')){ showToast('Seu navegador não suporta exportação de vídeo (MediaRecorder). Tente Chrome, Edge ou Firefox.'); return; }
+
+  const canvas = document.getElementById('video-preview-canvas');
+  if(!canvas){ return; }
+  if(record && !canvas.captureStream){ showToast('Seu navegador não suporta exportação de vídeo.'); return; }
+
+  const fmt = FORMATS.find(f=>f.id===project.format)||FORMATS[0];
+  const maxDim = 900;
+  let W,H;
+  if(fmt.w>=fmt.h){ W=Math.min(maxDim,fmt.w); H=Math.round(W*fmt.h/fmt.w); } else { H=Math.min(maxDim,fmt.h); W=Math.round(H*fmt.w/fmt.h); }
+  canvas.width=W; canvas.height=H;
+  const ctx = canvas.getContext('2d');
+
+  let imgs;
+  try{ imgs = await Promise.all(scenesData.map(s=>loadImage(s.image))); }
+  catch(e){ showToast('Erro ao carregar imagens das cenas'); return; }
+
+  let recorder=null, chunks=[];
+  if(record){
+    const mimeCandidates = ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
+    const mime = mimeCandidates.find(m=>MediaRecorder.isTypeSupported(m)) || 'video/webm';
+    const stream = canvas.captureStream(30);
+    recorder = new MediaRecorder(stream, {mimeType:mime});
+    recorder.ondataavailable = e=>{ if(e.data.size) chunks.push(e.data); };
+    recorder.start();
+  }
+
+  STATE.videoPlaying = true;
+  STATE.videoRecording = record;
+  updateVideoStatus(record ? 'Preparando gravação...' : 'Preparando prévia...');
+  const exportBtn=document.getElementById('video-export-btn'); if(exportBtn) exportBtn.disabled = true;
+
+  const speed = vc.speed || 1;
+  for(let i=0;i<scenesData.length;i++){
+    if(!STATE.videoPlaying) break;
+    const scene = scenesData[i], img = imgs[i];
+    const durMs = (vc.settings[scene.id].duration*1000)/speed;
+    const transition = i<scenesData.length-1 ? vc.settings[scene.id].transition : 'none';
+    const transMs = transition==='none' ? 0 : Math.min(600/speed, durMs*0.35);
+    updateVideoStatus(`${record?'Gravando':'Reproduzindo'} cena ${i+1} de ${scenesData.length}...`);
+    const movSetting = vc.settings[scene.id].movement || 'auto';
+    const movement = movSetting==='auto' ? AUTO_MOVEMENT_CYCLE[i % AUTO_MOVEMENT_CYCLE.length] : movSetting;
+    await holdSceneWithMotion(ctx, img, W, H, scene, Math.max(30, durMs-transMs), movement);
+    if(!STATE.videoPlaying) break;
+    if(transition!=='none' && i<scenesData.length-1){
+      await animateTransition(ctx, imgs[i], imgs[i+1], W, H, transMs, transition, scenesData[i], scenesData[i+1]);
+    }
+  }
+
+  const wasPlaying = STATE.videoPlaying;
+  STATE.videoPlaying = false; STATE.videoRecording = false;
+
+  if(recorder){
+    updateVideoStatus('Finalizando arquivo...');
+    recorder.stop();
+    await new Promise(res=>{ recorder.onstop=res; });
+    if(wasPlaying){
+      const blob = new Blob(chunks, {type:recorder.mimeType});
+      const url = URL.createObjectURL(blob);
+      const a=document.createElement('a'); a.href=url; a.download=`${project.name.replace(/\s+/g,'-').toLowerCase()}-video.webm`; a.click();
+      showToast('Vídeo exportado com sucesso');
+    } else {
+      showToast('Gravação cancelada');
+    }
+  }
+  updateVideoStatus(wasPlaying ? '' : 'Interrompido.');
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
